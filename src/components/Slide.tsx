@@ -268,7 +268,7 @@ const cancelBrandingEdit = () => {
           ) : (
             <div className="flex items-center gap-2">
               <span 
-  className="text-[14px] font-semibold tracking-tight"
+  className="text-[11px] font-semibold tracking-tight"
   style={{ 
     color: effectiveIsDark ? '#FFFFFF' : branding.secondaryColor,
     opacity: 0.8
@@ -621,20 +621,20 @@ case 'headline-img-subheadline':
     }
   };
 
-  return (
-    <div className="relative group shrink-0">
-      <div 
-        className={cn(
-          "relative shadow-2xl overflow-hidden border border-black/5",
-          getAspectRatioClass(),
-          data.layout !== 'full-bg' && "cursor-pointer"
-        )}
-        onClick={toggleBackgroundColor}
-        style={{ 
-          backgroundColor: data.backgroundColor || branding.backgroundColor,
-          width: aspectRatio === '9:16' ? '400px' : '450px'
-        }}
-      >
+return (
+  <div className="relative group shrink-0">
+    <div 
+      className={cn(
+        "relative overflow-hidden transition-all",
+        getAspectRatioClass(),
+        isFullBg ? "border-none shadow-none" : "shadow-2xl border border-black/5"
+      )}
+      onClick={toggleBackgroundColor}
+      style={{ 
+        backgroundColor: slideBg,
+        width: aspectRatio === '9:16' ? '400px' : '450px'
+      }}
+    >
 
        <input
         ref={imageInputRef}
