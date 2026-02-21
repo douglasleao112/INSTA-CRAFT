@@ -35,7 +35,7 @@ const INITIAL_CONFIG: CarouselConfig = {
       topLeft: { 
         enabled: true, 
         type: 'text', 
-        position: { x: 0, y: 0 },
+        position: { x: -5, y: -5 },
         name: 'Dr. Douglas Leão',
         handle: '@dr.douglasleao',
         isVerified: true,
@@ -48,7 +48,7 @@ const INITIAL_CONFIG: CarouselConfig = {
       topRight: { 
         enabled: true, 
         type: 'page', 
-        position: { x: 360, y: 0 },
+        position: { x: 370, y: -5 },
         name: 'Topo direito',
         handle: 'subtexto',
         isVerified: true,
@@ -61,7 +61,7 @@ const INITIAL_CONFIG: CarouselConfig = {
       centerLow: { 
         enabled: false, 
         type: 'text', 
-        position: { x: 120, y: 400 },
+        position: { x: 160, y: 350 },
         name: 'Centro',
         handle: 'subtexto',
         isVerified: false,
@@ -74,7 +74,7 @@ const INITIAL_CONFIG: CarouselConfig = {
       bottomLeft: { 
         enabled: false, 
         type: 'text', 
-        position: { x: 0, y: 480 },
+        position: { x: 0, y: 500 },
         name: 'Inferior esquerdo',
         handle: 'subtexto',
         isVerified: false,
@@ -87,7 +87,7 @@ const INITIAL_CONFIG: CarouselConfig = {
       bottomRight: { 
         enabled: false, 
         type: 'text', 
-        position: { x: 280, y: 480 },
+        position: { x: 330, y: 500 },
         name: 'Inferior direito',
         handle: 'subtexto',
         isVerified: false,
