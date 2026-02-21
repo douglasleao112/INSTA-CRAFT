@@ -365,7 +365,7 @@ const cancelBrandingEdit = () => {
           }, 200);
         }}
         className={cn(
-          "text-3xl font-extrabold leading-tight mb-4 outline-none transition-all rounded-lg px-2 -mx-2",
+          "text-2xl font-extrabold leading-tight mb-4 outline-none transition-all rounded-lg px-2 -mx-2",
           editingHeadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5 cursor-default"
         )}
         style={{ 
@@ -402,7 +402,7 @@ const cancelBrandingEdit = () => {
           }, 200);
         }}
         className={cn(
-          "text-xl font-medium opacity-90 outline-none transition-all rounded-lg px-2 -mx-2",
+          "text-lg font-medium opacity-90 outline-none transition-all rounded-lg px-2 -mx-2",
           editingSubheadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5 cursor-default"
         )}
         style={{ 

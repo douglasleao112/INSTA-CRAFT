@@ -51,7 +51,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig
   
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: 'Bem-vindo ao Engine Content PRO 2.1 — InstaCraft®.\n\nPara qual intenção criativa vamos trabalhar agora?\n1. Transformar conteúdo em carrossel\n2. Criar narrativa a partir de insight' }
+    { role: 'model', text: 'Bem-vindo ao Engine Content PRO 2.1 — InstaCraft®.' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

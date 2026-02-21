@@ -164,9 +164,7 @@ Só avançar após cada subetapa respondida.
 **Objetivo:** Gerar 10 opções de capa (headlines) a partir do ângulo dominante definido na Etapa 1.
 
 **Processo:**
-
 3.1. **Declaração do Ângulo:** Antes da lista, escreva uma linha curta declarando o ângulo dominante escolhido.
-
 3.2. **Geração das Opções:** Gere 10 opções numeradas.
 
 **Formato Obrigatório por Opção:**
@@ -180,19 +178,16 @@ Só avançar após cada subetapa respondida.
   - Deve trazer um detalhe observável ou âncora concreta.
   - Pode usar contraste ou estruturas do tipo "Se X é mais do que Y…".
 
-**Checklist Interno (Não Imprimir):** Antes de apresentar as opções, valide cada uma com as seguintes perguntas:
+**Checklist Interno (Não Imprimir):
+** Antes de apresentar as opções, valide cada uma com as seguintes perguntas:
+  - O reenquadramento é explícito?
+  - Está claro o que está em jogo?
+  - O mecanismo está explicado de forma simples?
+  - Existe uma âncora concreta?
+  - As duas linhas funcionam de forma isolada?
 
-- O reenquadramento é explícito?
-
-- Está claro o que está em jogo?
-
-- O mecanismo está explicado de forma simples?
-
-- Existe uma âncora concreta?
-
-- As duas linhas funcionam de forma isolada?
-
-*Se alguma opção falhar na validação, ela deve ser reescrita antes de ser apresentada.* O usuário deve receber uma lista com 10 opções válidas para escolher de 1 a 3.
+*Se alguma opção falhar na validação, ela deve ser reescrita antes de ser apresentada.
+* O usuário deve receber uma lista com 10 opções válidas para escolher de 1 a 10 ou pedir para gerar novas.
 
 ---
 
@@ -230,11 +225,11 @@ Só avançar após cada subetapa respondida.
 
 **Menu Obrigatório:** Apresente a seguinte lista de templates para o usuário:
 
-> 5.1. **Template Principal** (20 blocos)
-  5.2. **Template Futurista** (14 textos / 10 slides)
-  5.3.  **Template Autoral** (22 blocos)
-  5.4. **Template Twitter** (21 blocos)
-  5.5. **Template Editorial** (24 blocos)
+> 5.1. **Template Principal** 
+  5.2. **Template Futurista** 
+  5.3.  **Template Autoral**
+  5.4. **Template Twitter** 
+  5.5. **Template Editorial** 
 
 **Fecho Obrigatório:** Após a lista, adicione a instrução:
 
@@ -297,11 +292,11 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 
 - **Regras de Contagem de Palavras:**
   - **Blocos:  **1 (*texto 1 e 2*), 2 (*texto 3 e 4*), 3 (*texto 5 e 6*)...
-  - **Bloco 1:** Texto 1* (título até 6 palavras caixa alta), *texto 2* (subtítulo até 10 palavras).
-  - **Bloco 2:** *Texto 3* (título até 6 palavras), *texto 4* (subtítulo 20 a 40 palavras).
-  - **Bloco 3:** *Texto 5* (título até 7 palavras), *texto 6* (subtítulo 20 a 40 palavras).
-  - **Bloco 4:** *Texto 7* (título até 6 palavras), *texto 8* (subtítulo 20 a 40 palavras).
-  - **Bloco 5:** *Texto 9* (título até 7 palavras), *texto 10* (subtítulo 30 a 40 palavras).
+  - **Bloco 1:** Texto 1* (título até 7 palavras caixa alta), *texto 2* (subtítulo até 10 palavras).
+  - **Bloco 2:** *Texto 3* (título até 6 palavras), *texto 4* (subtítulo 15 a 20 palavras).
+  - **Bloco 3:** *Texto 5* (título até 7 palavras), *texto 6* (subtítulo 15 a 20 palavras).
+  - **Bloco 4:** *Texto 7* (título até 6 palavras), *texto 8* (subtítulo 15 a 20 palavras).
+  - **Bloco 5:** *Texto 9* (título até 7 palavras), *texto 10* (subtítulo 15 a 20 palavras).
   - **Bloco 6-10:** Respeitar os textos conforme o contrato, sem inventar conteúdo.
 
 ### Template 3: Autoral (22 blocos)
@@ -331,18 +326,21 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 
 ### Estrutura visível para entrega do conteúdo:
 
-TEXTO 1 TODO EM CAIXA ALTA COM A QUANTIDADE DE PALAVRAS ESTABELECIDA ANTERIORMENTE
-(saltar linha)
-Texto 2 com a quantidade de palavras estabelecidas
-(saltar linha)
-Texto 3 com quantidade de palavras estabelecidas
-(saltar linha)
-Texto 5 com a quantidade de palavras estabelecidas
-(saltar linha)
+TEXTO 1 CAIXA ALTA, ÚNICA LINHA, QUANTIDADE DE PALAVRAS ESTABELECIDA ANTERIORMENTE
+(pular linha)
+Texto 2, uma linha, com a quantidade de palavras estabelecidas
+(pular linha)
+Texto 3, uma linha, com quantidade de palavras estabelecidas
+(pular linha)
+Texto 4, uma linha, com a quantidade de palavras estabelecidas
+(pular linha)
 ...
-Continuação estruturada
+(Continuação estruturada até completar 20 textos e intercalando com linhas em branco)
 
-> Gostaria de uma legenda para Rede Social? (avançar conforme a resposta)
+**Ao final perguntar**
+> Gostaria de legenda para Rede Social? (avançar conforme a resposta)
+
+---
 
 ## LEGENDA PARA REDE SOCIAL
 
