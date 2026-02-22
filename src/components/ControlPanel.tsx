@@ -73,7 +73,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: 'Olá, vamos começar?' }
+    { role: 'model', text: '🔮 Olá, vamos começar?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -180,11 +180,11 @@ useEffect(() => {
     }
   };
 
-  const handleBrandingChange = (key: keyof Branding, value: any) => {
-    updateConfig({
-      branding: { ...config.branding, [key]: value }
-    });
-  };
+const handleBrandingChange = (key: keyof Branding, value: any) => {
+  updateConfig({
+    branding: { ...config.branding, [key]: value }
+  });
+};
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;

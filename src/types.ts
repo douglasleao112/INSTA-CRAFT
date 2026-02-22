@@ -49,9 +49,24 @@ export interface Branding {
     bottomLeft: SignatureSlot;
     bottomRight: SignatureSlot;
   };
+  typography: {
+    headlineFontFamily: string;
+    headlineFontSize: number;   // px
+    headlineFontWeight: number;
+
+    subheadlineFontFamily: string;
+    subheadlineFontSize: number; // px
+    subheadlineFontWeight: number;
+
+    signatureFontFamily: string;
+    signatureFontSize: number; // px
+    signatureFontWeight: number;
+  };
 }
 
 export interface SlideData {
+  headlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number };
+  subheadlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number };
   id: string;
   headline: string;
   subheadline: string;
