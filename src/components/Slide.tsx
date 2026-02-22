@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AspectRatio, Branding, SlideData, LayoutType, SignatureSlot } from '../types';
 import { cn } from '../lib/utils';
-import { BadgeCheck, Trash2 } from 'lucide-react';
+import { BadgeCheck, Trash2, Plus, X } from 'lucide-react';
 import { TextToolbar } from './TextToolbar';
 
 const LAYOUTS: { type: LayoutType; label: string }[] = [
@@ -770,115 +770,171 @@ case 'headline-img-subheadline':
 
       </div>
 
-      {/* Layout Switcher - Outside and Smaller */}
-      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 z-40 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 flex flex-col items-center gap-3">
-        <div className="flex gap-1.5 bg-white/95 backdrop-blur-sm p-1.5 rounded-xl shadow-xl border border-black/5">
-          {LAYOUTS.map((layout) => (
-            <button
-              key={layout.type}
-              onClick={(e) => {
-                e.stopPropagation();
-                setActivePresetIndex(null);
-                onUpdate?.({ layout: layout.type });
-              }}
-              className={cn(
-                "w-8 h-8 rounded-lg border-2 transition-all flex flex-col items-center justify-center p-1 group/btn",
-                (data.layout === layout.type && activePresetIndex === null)
-                  ? "border-indigo-500 bg-indigo-50" 
-                  : "border-transparent hover:bg-black/5"
-              )}
-              title={layout.label}
-            >
-              <div className="w-full h-full flex flex-col gap-0.5 overflow-hidden">
-                {layout.type === 'full-bg' && (
-                  <div className="w-full h-full bg-slate-200 rounded-sm relative">
-                    <div className="absolute bottom-0.5 left-0.5 right-0.5 h-0.5 bg-slate-400 rounded-full" />
-                  </div>
-                )}
-                {layout.type === 'text-top-img-bottom' && (
-                  <>
-                    <div className="w-full h-0.5 bg-slate-400 rounded-full" />
-                    <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
-                    <div className="w-full flex-1 bg-slate-200 rounded-sm mt-0.5" />
-                  </>
-                )}
-                {layout.type === 'img-top-text-bottom' && (
-                  <>
-                    <div className="w-full flex-1 bg-slate-200 rounded-sm mb-0.5" />
-                    <div className="w-full h-0.5 bg-slate-400 rounded-full" />
-                    <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
-                  </>
-                )}
-                {layout.type === 'img-right-text-left' && (
-                  <div className="flex gap-0.5 h-full w-full">
-                    <div className="flex-1 flex flex-col gap-0.5 justify-center">
-                      <div className="w-full h-0.5 bg-slate-400 rounded-full" />
-                      <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
-                    </div>
-                    <div className="w-1/3 bg-slate-200 rounded-sm" />
-                  </div>
-                )}
-                {layout.type === 'headline-img-subheadline' && (
-                  <>
-                    <div className="w-full h-0.5 bg-slate-400 rounded-full" />
-                    <div className="w-full flex-1 bg-slate-200 rounded-sm my-0.5" />
-                    <div className="w-full h-0.5 bg-slate-300 rounded-full" />
-                  </>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
+    
 
-        {/* Preset Slots */}
-        <div className="flex gap-2">
-          {presets.map((preset, i) => (
-            <button
-              key={i}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (preset) {
-                  setActivePresetIndex(i);
-                  onUpdate?.({
-                    layout: preset.layout,
-                    headlinePos: preset.headlinePos,
-                    subheadlinePos: preset.subheadlinePos,
-                    imagePos: preset.imagePos,
-                    backgroundColor: preset.backgroundColor
-                  });
-                } else {
-                  setActivePresetIndex(i);
-                  onSavePreset(i, data);
-                }
-              }}
-              className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold transition-all relative group/preset border-2",
-                activePresetIndex === i
-                  ? "border-indigo-500 bg-indigo-50 text-indigo-600 shadow-md"
-                  : preset 
-                    ? "bg-gray-100 text-gray-500 border-transparent hover:bg-gray-200" 
-                    : "border-dashed border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500"
-              )}
-              title={preset ? "Aplicar Favorito" : "Salvar como Favorito"}
-            >
-              {i + 1}
-              {preset && (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (activePresetIndex === i) setActivePresetIndex(null);
-                    onDeletePreset(i);
-                  }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/preset:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
-                  title="Excluir Favorito"
-                >
-                  <Trash2 className="w-2.5 h-2.5" />
+
+    <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 z-40 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 flex flex-col items-center gap-3 w-auto">
+  {/* CONTAINER ÚNICO: Layouts (esquerda) | Divisor | Presets (direita) */}
+  <div className="inline-flex items-center bg-white/95 backdrop-blur-sm p-1.5 rounded-xl shadow-xl border border-black/5">
+
+    {/* Layouts */}
+    <div className="flex gap-1.5">
+      {LAYOUTS.map((layout) => (
+        <button
+          key={layout.type}
+          onClick={(e) => {
+            e.stopPropagation();
+            setActivePresetIndex(null);
+            onUpdate?.({ layout: layout.type });
+          }}
+          className={cn(
+            "w-8 h-8 rounded-lg border-2 transition-all flex flex-col items-center justify-center p-1 group/btn",
+            (data.layout === layout.type && activePresetIndex === null)
+              ? "border-indigo-500 bg-indigo-50"
+              : "border-transparent hover:bg-black/5"
+          )}
+          title={layout.label}
+        >
+          <div className="w-full h-full flex flex-col gap-0.5 overflow-hidden">
+            {layout.type === 'full-bg' && (
+              <div className="w-full h-full bg-slate-200 rounded-sm relative">
+                <div className="absolute bottom-0.5 left-0.5 right-0.5 h-0.5 bg-slate-400 rounded-full" />
+              </div>
+            )}
+
+            {layout.type === 'text-top-img-bottom' && (
+              <>
+                <div className="w-full h-0.5 bg-slate-400 rounded-full" />
+                <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
+                <div className="w-full flex-1 bg-slate-200 rounded-sm mt-0.5" />
+              </>
+            )}
+
+            {layout.type === 'headline-img-subheadline' && (
+              <>
+                <div className="w-full h-0.5 bg-slate-400 rounded-full" />
+                <div className="w-full flex-1 bg-slate-200 rounded-sm my-0.5" />
+                <div className="w-full h-0.5 bg-slate-300 rounded-full" />
+              </>
+            )}
+
+            {layout.type === 'img-top-text-bottom' && (
+              <>
+                <div className="w-full flex-1 bg-slate-200 rounded-sm mb-0.5" />
+                <div className="w-full h-0.5 bg-slate-400 rounded-full" />
+                <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
+              </>
+            )}
+
+            {layout.type === 'img-right-text-left' && (
+              <div className="flex gap-0.5 h-full w-full">
+                <div className="flex-1 flex flex-col gap-0.5 justify-center">
+                  <div className="w-full h-0.5 bg-slate-400 rounded-full" />
+                  <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
                 </div>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+                <div className="w-1/3 bg-slate-200 rounded-sm" />
+              </div>
+            )}
+
+          </div>
+        </button>
+      ))}
+    </div>
+
+    {/* DIVISOR VERTICAL */}
+    <div className="mx-2 h-7 w-px bg-black/10" />
+
+  {/* PRESETS: números compactados + + no final com o mesmo gap */}
+<div className="flex items-center gap-2">
+  {presets.map((preset, i) => {
+    if (!preset) return null;
+
+    return (
+
+
+
+<div key={i} className="relative w-8 h-8 group/preset">
+  {/* Botão número */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setActivePresetIndex(i);
+      onUpdate?.({
+        layout: preset.layout,
+        headlinePos: preset.headlinePos,
+        subheadlinePos: preset.subheadlinePos,
+        imagePos: preset.imagePos,
+        backgroundColor: preset.backgroundColor,
+      });
+    }}
+    className={cn(
+      "w-8 h-8 rounded-lg flex items-center justify-center",
+      "text-[14px] font-extrabold border-2 transition-all",
+      activePresetIndex === i
+        ? "border-indigo-500 bg-indigo-50 text-indigo-600 shadow-md"
+        : "border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200"
+    )}
+    title="Aplicar Favorito"
+  >
+    {i + 1}
+  </button>
+
+  {/* Bolinha vermelha (aparece no hover do container) */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      if (activePresetIndex === i) setActivePresetIndex(null);
+      onDeletePreset(i);
+    }}
+    className={cn(
+      "absolute -top-1 -right-1 z-50",
+      "w-3 h-3 rounded-full bg-red-500",
+      "flex items-center justify-center shadow-sm",
+      "opacity-0 scale-75 pointer-events-none",
+      "transition-all duration-150",
+      "group-hover/preset:opacity-100 group-hover/preset:scale-100 group-hover/preset:pointer-events-auto",
+      "group-focus-within/preset:opacity-100 group-focus-within/preset:scale-100 group-focus-within/preset:pointer-events-auto"
+    )}
+    title="Excluir Favorito"
+  >
+    <X className="w-2 h-2 text-white" />
+  </button>
+</div>
+
+
+    );
+  })}
+
+  {/* BOTÃO + sempre no final (mesmo gap do último número) */}
+  {presets.filter((p) => p !== null).length < 5 && (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        const firstEmptyIndex = presets.findIndex((p) => p === null);
+        if (firstEmptyIndex !== -1) {
+          setActivePresetIndex(firstEmptyIndex);
+          onSavePreset(firstEmptyIndex, data);
+        }
+      }}
+      className={cn(
+        "w-8 h-8 rounded-lg border-2 border-dashed flex items-center justify-center",
+        "text-gray-400 hover:text-indigo-500 hover:border-indigo-400 transition-all"
+      )}
+      title="Salvar como Favorito"
+    >
+      <Plus className="w-4 h-4" />
+    </button>
+  )}
+</div>
+  </div>
+</div>
+      
+
+
+
+
+
+
     </div>
   );
 };
