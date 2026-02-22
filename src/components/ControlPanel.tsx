@@ -45,19 +45,26 @@ interface ControlPanelProps {
   };
   updateConfig: (updates: any) => void;
   generateSlides: () => void;
-  onClearImages?: () => void;
+
+  // antes: onClearImages?: () => void;
+  onResetConfig?: () => void;
+
   uploadedImages: string[];
   setUploadedImages: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({ 
-  config, 
-  updateConfig, 
-  generateSlides, 
-  onClearImages,
+export const ControlPanel: React.FC<ControlPanelProps> = ({
+  config,
+  updateConfig,
+  generateSlides,
+
+  // antes: onClearImages,
+  onResetConfig,
+
   uploadedImages,
   setUploadedImages
 }) => {
+
   const [activeTab, setActiveTab] = useState<'ideia' | 'branding' | 'content' | 'fotos'>('ideia');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -89,7 +96,25 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
   // ✅ garante homePosition para não "perder" a assinatura ao reativar
 useEffect(() => {
-  const sigs = config.branding.signatures;
+  
+  
+  const handleResetConfig = () => {
+  // opcional: confirmação
+  const ok = window.confirm("Resetar configurações? Isso vai limpar o localStorage.");
+  if (!ok) return;
+
+  // limpa tudo (se preferir, use removeItem nas chaves específicas)
+  window.localStorage.clear();
+
+  // limpa imagens em memória também
+  setUploadedImages([]);
+
+  // reseta config no nível do App (onde existe INITIAL_CONFIG)
+  onResetConfig?.();
+};
+
+
+const sigs = config.branding.signatures;
 
   let changed = false;
 
@@ -309,13 +334,13 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
         <div className={cn("flex items-center gap-1", isMinimized && "flex-col")}>
           {!isMinimized && (
             <>
-              <button 
-                onClick={onClearImages}
-                title="Limpar Imagens"
-                className="p-1.5 hover:bg-black/5 rounded-lg transition-colors text-gray-400 hover:text-red-500"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
+              <button
+onClick={() => onResetConfig?.()}
+  title="Resetar configurações"
+  className="p-1.5 hover:bg-black/5 rounded-lg transition-colors text-gray-400 hover:text-indigo-600"
+>
+  <RotateCcw className="w-4 h-4" />
+</button>
               <button 
                 onClick={() => setIsPinned(!isPinned)}
                 title={isPinned ? "Desafixar" : "Centralizar Painel"}

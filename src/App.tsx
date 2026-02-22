@@ -179,6 +179,26 @@ export default function App() {
     }
   };
 
+
+  const resetConfigs = () => {
+  const ok = confirm('Resetar configurações? Isso vai apagar o localStorage e voltar ao padrão.');
+  if (!ok) return;
+
+  // apaga somente o que é do app (mais seguro do que localStorage.clear())
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('slide-presets');
+
+  // limpa imagens em memória
+  setUploadedImages([]);
+
+  // volta config padrão e zera slides
+  setConfig({ ...INITIAL_CONFIG, slides: [] });
+
+  // opcional: resetar view também
+  setWorkspacePos({ x: 0, y: 0 });
+  setZoom(1);
+};
+
   const resetView = () => {
     setWorkspacePos({ x: 0, y: 0 });
     setZoom(1);
@@ -414,14 +434,14 @@ export default function App() {
       </header>
 
       {/* Floating Control Panel */}
-      <ControlPanel 
-        config={config} 
-        updateConfig={updateConfig} 
-        generateSlides={generateSlides} 
-        onClearImages={clearSlideImages}
-        uploadedImages={uploadedImages}
-        setUploadedImages={setUploadedImages}
-      />
+     <ControlPanel 
+  config={config} 
+  updateConfig={updateConfig} 
+  generateSlides={generateSlides} 
+  onResetConfig={resetConfigs}
+  uploadedImages={uploadedImages}
+  setUploadedImages={setUploadedImages}
+/>
 
       {/* Main Workspace Area */}
      <main
