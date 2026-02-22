@@ -17,7 +17,10 @@ import {
   Sparkles,
   MessageSquare,
   X,
-  Check
+  Check,
+  RotateCcw,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { AspectRatio, LayoutType, Branding, SlideData, SignatureSlot } from '../types';
 import { cn } from '../lib/utils';
@@ -39,11 +42,13 @@ interface ControlPanelProps {
   };
   updateConfig: (updates: any) => void;
   generateSlides: () => void;
+  onReset?: () => void;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig, generateSlides }) => {
+export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig, generateSlides, onReset }) => {
   const [activeTab, setActiveTab] = useState<'ideia' | 'branding' | 'content' | 'fotos'>('ideia');
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [tempImage, setTempImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -168,32 +173,70 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
 
   return (
     <motion.div
-      drag
+      drag={!isPinned}
       dragMomentum={false}
       dragTransition={{ power: 0 }}
-      initial={{ x: 40, y: 80 }}
+      animate={isPinned ? { 
+        x: '-50%', 
+        left: '50%',
+        top: 0,
+        width: isMinimized ? '56px' : '90%',
+        maxWidth: isMinimized ? '56px' : '1000px',
+        borderRadius: isMinimized ? '24px' : '0 0 24px 24px'
+      } : { 
+        x: 0,
+        left: '40px',
+        top: '80px',
+        width: isMinimized ? '56px' : '320px',
+        borderRadius: isMinimized ? '24px' : '24px'
+      }}
       className={cn(
-        "fixed z-50 bg-white/90 backdrop-blur-xl border border-black/5 shadow-2xl rounded-3xl overflow-hidden",
-        isMinimized ? "w-14 h-14" : "w-80"
+        "fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden transition-all duration-300",
+        isMinimized ? "h-14" : ""
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-black/5 bg-white/50 cursor-grab active:cursor-grabbing">
+      <div className={cn(
+        "flex items-center justify-between p-4 border-b border-black/5 bg-white/50",
+        !isPinned ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+      )}>
         {!isMinimized && (
           <div className="flex items-center gap-2">
-            
             <div className="flex flex-col">
-              
               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Engine Content</span>
             </div>
           </div>
         )}
-        <button 
-          onClick={() => setIsMinimized(!isMinimized)}
-          className="p-1.5 hover:bg-black/5 rounded-lg transition-colors"
-        >
-          <Maximize2 className="w-4 h-4 text-gray-500" />
-        </button>
+        
+        <div className="flex items-center gap-1">
+          {!isMinimized && (
+            <>
+              <button 
+                onClick={onReset}
+                title="Resetar Workflow"
+                className="p-1.5 hover:bg-black/5 rounded-lg transition-colors text-gray-400 hover:text-red-500"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setIsPinned(!isPinned)}
+                title={isPinned ? "Desafixar" : "Fixar no Topo"}
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors",
+                  isPinned ? "bg-indigo-100 text-indigo-600" : "hover:bg-black/5 text-gray-400 hover:text-gray-600"
+                )}
+              >
+                {isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+              </button>
+            </>
+          )}
+          <button 
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="p-1.5 hover:bg-black/5 rounded-lg transition-colors"
+          >
+            <Maximize2 className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
       </div>
 
       {!isMinimized && (

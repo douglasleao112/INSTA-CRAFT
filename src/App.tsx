@@ -103,8 +103,28 @@ const INITIAL_CONFIG: CarouselConfig = {
   isGlobalBranding: true,
 };
 
+const STORAGE_KEY = 'instacraft_branding_config';
+
 export default function App() {
-  const [config, setConfig] = useState<CarouselConfig>(INITIAL_CONFIG);
+  const [config, setConfig] = useState<CarouselConfig>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return { 
+          ...INITIAL_CONFIG, 
+          branding: parsed.branding || INITIAL_CONFIG.branding,
+          isGlobalBranding: parsed.isGlobalBranding ?? INITIAL_CONFIG.isGlobalBranding,
+          aspectRatio: parsed.aspectRatio || INITIAL_CONFIG.aspectRatio,
+          slideCount: parsed.slideCount || INITIAL_CONFIG.slideCount
+        };
+      } catch (e) {
+        return INITIAL_CONFIG;
+      }
+    }
+    return INITIAL_CONFIG;
+  });
+
   const [workspacePos, setWorkspacePos] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [isTextEditing, setIsTextEditing] = useState(false);
@@ -112,8 +132,28 @@ export default function App() {
 
   const workspaceRef = useRef<HTMLElement | null>(null);
 
+  // Persist branding changes
+  React.useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      branding: config.branding,
+      isGlobalBranding: config.isGlobalBranding,
+      aspectRatio: config.aspectRatio,
+      slideCount: config.slideCount
+    }));
+  }, [config.branding, config.isGlobalBranding, config.aspectRatio, config.slideCount]);
+
   const updateConfig = (updates: Partial<CarouselConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
+  };
+
+  const resetToInitial = () => {
+    if (confirm('Deseja realmente resetar todas as configurações de branding?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      setConfig({
+        ...INITIAL_CONFIG,
+        slides: config.slides // Keep current slides if any
+      });
+    }
   };
 
   const resetView = () => {
@@ -306,6 +346,7 @@ export default function App() {
         config={config} 
         updateConfig={updateConfig} 
         generateSlides={generateSlides} 
+        onReset={resetToInitial}
       />
 
       {/* Main Workspace Area */}
