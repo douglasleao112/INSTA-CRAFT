@@ -46,20 +46,34 @@ interface ControlPanelProps {
   updateConfig: (updates: any) => void;
   generateSlides: () => void;
   onClearImages?: () => void;
+  uploadedImages: string[];
+  setUploadedImages: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig, generateSlides, onClearImages }) => {
+export const ControlPanel: React.FC<ControlPanelProps> = ({ 
+  config, 
+  updateConfig, 
+  generateSlides, 
+  onClearImages,
+  uploadedImages,
+  setUploadedImages
+}) => {
   const [activeTab, setActiveTab] = useState<'ideia' | 'branding' | 'content' | 'fotos'>('ideia');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [tempImage, setTempImage] = useState<string | null>(null);
+  const [localText, setLocalText] = useState(() => 
+    config.slides
+      .map(s => `${s.headline || ''}\n${s.subheadline || ''}`.trim())
+      .filter(t => t.length > 0)
+      .join('\n\n')
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: 'Bem-vindo ao Engine Content PRO 2.1 — InstaCraft®.' }
+    { role: 'model', text: 'Olá, vamos começar?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -159,31 +173,36 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig
     });
   };
 
-  const applyImagesRandomly = () => {
-    if (uploadedImages.length === 0) return;
+  // Sync local text with slides when they change (e.g. from AI)
+  useEffect(() => {
+    const text = config.slides
+      .map(s => `${s.headline || ''}\n${s.subheadline || ''}`.trim())
+      .filter(t => t.length > 0)
+      .join('\n\n');
     
-    // Embaralha uma cópia das imagens
-    const shuffled = [...uploadedImages].sort(() => Math.random() - 0.5);
+    // Only update if the content is actually different to avoid cursor jumps
+    // when typing (since handleTextContentChange also updates config.slides)
+    const currentNormalized = localText.replace(/\n\n+/g, '\n\n').trim();
+    const newNormalized = text.replace(/\n\n+/g, '\n\n').trim();
     
-    const newSlides = config.slides.map((slide, index) => {
-      // Usa o índice do slide para pegar a imagem sequencialmente do array embaralhado
-      // O operador % garante que volte ao início se houver mais slides que fotos
-      const imageIndex = index % shuffled.length;
-      return { ...slide, image: shuffled[imageIndex] };
-    });
-    
-    updateConfig({ slides: newSlides });
-  };
+    if (newNormalized !== currentNormalized) {
+      setLocalText(text);
+    }
+  }, [config.slides]);
 
   const handleTextContentChange = (text: string) => {
-    // ... (rest of handleTextContentChange remains same)
+    setLocalText(text);
     const normalized = text.replace(/\r\n/g, '\n');
+    // Split by double newlines or single newlines to get potential headlines/subheadlines
+    // We'll treat each non-empty line as a piece of content
     const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
     const newSlides = [...config.slides];
     for (let i = 0; i < config.slideCount; i++) {
       if (!newSlides[i]) {
         newSlides[i] = { id: crypto.randomUUID(), headline: '', subheadline: '', layout: 'full-bg' };
       }
+      // Logic: 2 lines per slide
       newSlides[i].headline = lines[i * 2] || '';
       newSlides[i].subheadline = lines[i * 2 + 1] || '';
     }
@@ -214,20 +233,20 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
       y: '-50%',
       left: '50%',
       top: '50%',
-      width: isMinimized ? '64px' : '90%',
-      maxWidth: isMinimized ? '64px' : '1000px',
-      height: isMinimized ? '64px' : 'auto',
-      borderRadius: '24px',
+      width: isMinimized ? '48px' : '90%',
+      maxWidth: isMinimized ? '48px' : '1000px',
+      height: isMinimized ? '48px' : 'auto',
+      borderRadius: isMinimized ? '16px' : '24px',
     },
     unpinned: {
       x: 0,
       y: 0,
       left: '40px',
       top: '80px',
-      width: isMinimized ? '64px' : '320px',
-      maxWidth: isMinimized ? '64px' : '320px',
-      height: isMinimized ? '64px' : 'auto',
-      borderRadius: '24px',
+      width: isMinimized ? '48px' : '320px',
+      maxWidth: isMinimized ? '48px' : '320px',
+      height: isMinimized ? '48px' : 'auto',
+      borderRadius: isMinimized ? '16px' : '24px',
     }
   };
 
@@ -246,7 +265,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
       <div className={cn(
         "flex items-center justify-between p-4 border-b border-black/5 bg-white/50",
         !isPinned ? "cursor-grab active:cursor-grabbing" : "cursor-default",
-        isMinimized && "border-none p-2 justify-center h-full"
+        isMinimized && "border-none p-0 flex items-center justify-center h-full w-full"
       )}>
         {!isMinimized && (
           <div className="flex items-center gap-2">
@@ -812,17 +831,14 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
                   rows={10}
                   className="w-full p-4 rounded-2xl border border-black/5 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none font-medium"
                   placeholder={`Título do Slide 1
-
 Subtítulo do slide 1
 
 Título do Slide 2
-
 Subtítulo do slide 2`}
                   onChange={(e) => handleTextContentChange(e.target.value)}
-                 value={config.slides
-  .map(s => `${s.headline || ''}\n\n${s.subheadline || ''}`.trim())
-  .join('\n\n')}
+                  value={localText}
                 />
+               
               </div>
             )}
 
@@ -857,7 +873,7 @@ Subtítulo do slide 2`}
       />
     </div>
 
-    {/* Só aparece quando o botão "Aplicar Aleatoriamente" aparecer */}
+    {/* Só aparece quando houver fotos */}
     {uploadedImages.length > 0 && (
       <div className="space-y-6">
         {/* Arredondamento (global) */}
@@ -898,8 +914,17 @@ Subtítulo do slide 2`}
 
           <div className="grid grid-cols-4 gap-2">
             {uploadedImages.slice(0, 8).map((img, i) => (
-              <div key={i} className="aspect-square rounded-lg overflow-hidden border border-black/5 bg-gray-100">
+              <div key={i} className="group relative aspect-square rounded-lg overflow-hidden border border-black/5 bg-gray-100">
                 <img src={img} className="w-full h-full object-cover" alt="" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUploadedImages(prev => prev.filter((_, index) => index !== i));
+                  }}
+                  className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-4 h-4 text-white" />
+                </button>
               </div>
             ))}
             {uploadedImages.length > 8 && (
@@ -908,14 +933,6 @@ Subtítulo do slide 2`}
               </div>
             )}
           </div>
-
-          <button
-            onClick={applyImagesRandomly}
-            className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2"
-          >
-            <Layers className="w-4 h-4" />
-            Aplicar Aleatoriamente
-          </button>
         </div>
       </div>
     )}
@@ -927,7 +944,7 @@ Subtítulo do slide 2`}
           <div className="p-5 pt-0">
             <button
               onClick={generateSlides}
-              className="w-full py-4 bg-black text-white rounded-2xl font-bold text-sm hover:bg-gray-800 transition-all shadow-xl flex items-center justify-center gap-2"
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Gerar Carrossel

@@ -268,7 +268,7 @@ const cancelBrandingEdit = () => {
           ) : (
             <div className="flex items-center gap-2">
               <span 
-  className="text-[11px] font-semibold tracking-tight"
+  className="text-[9px] font-semibold tracking-tight"
   style={{ 
     color: effectiveIsDark ? '#FFFFFF' : branding.secondaryColor,
     opacity: 0.8
@@ -449,10 +449,10 @@ case 'full-bg':
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-20 pointer-events-none" />
 
       {/* Texto em cima (continua editável) */}
-      <div 
-        className="absolute bottom-16 left-10 right-10 z-30"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div 
+  className="absolute bottom-10 left-4 right-4 z-30"
+  onClick={(e) => e.stopPropagation()}
+>
         {headlineElement}
         {subheadlineElement}
       </div>
@@ -462,7 +462,7 @@ case 'full-bg':
 
 case 'text-top-img-bottom':
   return (
-    <div className="flex flex-col w-full h-full p-10 gap-8">
+ <div className="flex flex-col w-full h-full px-6 py-8 gap-8">
       <div className="flex-shrink-0 mt-10">
         {headlineElement}
         {subheadlineElement}
@@ -500,10 +500,10 @@ case 'text-top-img-bottom':
   );
 
       case 'img-top-text-bottom':
-        return (
-          <div className="flex flex-col w-full h-full p-10 gap-8">
-                      
-<div className="h-[50%] mt-10 overflow-hidden shadow-2xl" style={imgWrapStyle}>
+       return (
+  <div className="flex flex-col w-full h-full px-6 py-6 gap-8">
+                    
+    <div className="h-[50%] mt-5 overflow-hidden shadow-2xl" style={imgWrapStyle}>
   <div
     className="relative w-full h-full cursor-pointer"
     onClick={pickSlideImage}
@@ -539,7 +539,7 @@ case 'text-top-img-bottom':
 
       case 'img-right-text-left':
         return (
-          <div className="flex w-full h-full p-10 gap-8">
+          <div className="flex w-full h-full px-6 py-8 gap-8">
             <div className="flex-1 mt-10 flex flex-col justify-center">
               {headlineElement}
               {subheadlineElement}
@@ -576,7 +576,7 @@ case 'text-top-img-bottom':
         );
 case 'headline-img-subheadline':
   return (
-    <div className="flex flex-col w-full h-full p-10 gap-6">
+    <div className="flex flex-col w-full h-full px-6 py-8 gap-8">
       
     
       <div className="text-left mt-10">

@@ -19,8 +19,8 @@ const INITIAL_CONFIG: CarouselConfig = {
     primaryColor: '#1A1A1A',
     secondaryColor: '#4A4A4A',
     highlightColor: '#242f9c',
-    handle: '@dr.douglasleao',
-    name: 'Dr. Douglas Leão',
+    handle: '@usuario',
+    name: 'Usuário',
     imageRadius: 14,
     isVerified: true,
     showAvatar: false,
@@ -50,10 +50,10 @@ const INITIAL_CONFIG: CarouselConfig = {
         type: 'page', 
         position: { x: 370, y: -5 },
         name: 'Topo direito',
-        handle: 'subtexto',
-        isVerified: true,
+        handle: '',
+        isVerified: false,
         showAvatar: false,
-        avatarBorderColor: '#8c8c8c',
+        avatarBorderColor: '#ffffff',
         avatarBorderWidth: 1,
         avatarBorderRadius: 50,
         showFrame: false
@@ -63,7 +63,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         type: 'text', 
         position: { x: 160, y: 350 },
         name: 'Centro',
-        handle: 'subtexto',
+        handle: '',
         isVerified: false,
         showAvatar: false,
         avatarBorderColor: '#ffffff',
@@ -76,7 +76,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         type: 'text', 
         position: { x: 0, y: 500 },
         name: 'Inferior esquerdo',
-        handle: 'subtexto',
+        handle: '',
         isVerified: false,
         showAvatar: false,
         avatarBorderColor: '#ffffff',
@@ -89,7 +89,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         type: 'text', 
         position: { x: 330, y: 500 },
         name: 'Inferior direito',
-        handle: 'subtexto',
+        handle: '',
         isVerified: false,
         showAvatar: false,
         avatarBorderColor: '#ffffff',
@@ -129,6 +129,7 @@ export default function App() {
   const [zoom, setZoom] = useState(1);
   const [isTextEditing, setIsTextEditing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const workspaceRef = useRef<HTMLElement | null>(null);
 
@@ -232,16 +233,25 @@ export default function App() {
     }
 
     const newBatch: SlideData[] = Array.from({ length: batchSize }).map((_, i) => {
+      const existingSlide = config.slides[i];
       // O primeiro é sempre full-bg, os outros são aleatórios (incluindo full-bg)
       const layout = i === 0 ? 'full-bg' : randomLayouts[Math.floor(Math.random() * randomLayouts.length)];
       const useAltBg = altBgIndices.includes(i);
 
+      let image = existingSlide?.image || `https://picsum.photos/seed/${i + 100}/1080/1350`;
+      
+      // If we have uploaded images, apply them randomly/sequentially
+      if (uploadedImages.length > 0) {
+        const shuffled = [...uploadedImages].sort(() => Math.random() - 0.5);
+        image = shuffled[i % shuffled.length];
+      }
+
       return {
-        id: crypto.randomUUID(),
-        headline: `Título do Slide ${i + 1}`,
-        subheadline: `Subtítulo explicativo do slide ${i + 1}`,
+        id: existingSlide?.id || crypto.randomUUID(),
+        headline: existingSlide?.headline || `Título do Slide ${i + 1}`,
+        subheadline: existingSlide?.subheadline || `Subtítulo explicativo do slide ${i + 1}`,
         layout,
-        image: `https://picsum.photos/seed/${i + 100}/1080/1350`,
+        image,
         backgroundColor: useAltBg ? config.branding.alternativeBackgroundColor : config.branding.backgroundColor,
       };
     });
@@ -319,13 +329,31 @@ export default function App() {
           <div className="px-3 py-1 bg-black/5 rounded-lg text-[10px] font-black text-gray-500">
             {Math.round(zoom * 100)}%
           </div>
-          <button 
-            onClick={resetView}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-black/5 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all shadow-sm"
-          >
-            <RefreshCcw className="w-3.5 h-3.5" />
-            Resetar Vista
-          </button>
+         <button 
+  onClick={resetView}
+  className="flex items-center gap-2 px-4 py-2 bg-white border border-black/5 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-all shadow-sm"
+>
+  <svg
+    viewBox="0 0 24 24"
+    className="w-3.5 h-3.5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* Canto superior esquerdo */}
+    <path d="M4 9V4h5" />
+    {/* Canto superior direito */}
+    <path d="M20 9V4h-5" />
+    {/* Canto inferior esquerdo */}
+    <path d="M4 15v5h5" />
+    {/* Canto inferior direito */}
+    <path d="M20 15v5h-5" />
+  </svg>
+
+ Centralizar 
+</button>
           
           <button 
             className={cn(
@@ -347,6 +375,8 @@ export default function App() {
         updateConfig={updateConfig} 
         generateSlides={generateSlides} 
         onClearImages={clearSlideImages}
+        uploadedImages={uploadedImages}
+        setUploadedImages={setUploadedImages}
       />
 
       {/* Main Workspace Area */}
@@ -392,7 +422,7 @@ export default function App() {
       >
 <motion.div
   animate={{ x: workspacePos.x, y: workspacePos.y, scale: zoom }}
-  className="grid grid-cols-5 gap-x-12 gap-y-20 px-40 min-w-max origin-top-left"
+ className="grid grid-cols-5 gap-x-10 gap-y-16 px-4 min-w-max origin-top-left"
   style={{ transformOrigin: '0 0' }}
 >
   {config.slides.map((slide, index) => (

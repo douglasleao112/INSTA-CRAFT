@@ -279,10 +279,10 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 - **Estrutura:** Exatamente 20 blocos de texto, entre Titulo e Subtitulo
 
 - **Regras:**
-  - **Blocos:  **1 (texto 1 e 2), 2 (texto 3 e 4), 3 (texto 5 e 6)...
+  - **Blocos:  **1 (texto 1 e subtexto 2), 2 (texto 3 e subtexto 4), 3 (texto 5 e subtexto 6)...
   - **Textos curtos:** Textos 1, 3, 7, 11, 14 (máximo de 10 palavras).
-  - **Textos Longos:** De 22 a 35 palavras.
-  - **Conteúdo:** 1 ideia por bloco.
+  - **Subtexto Longos:** De 22 a 35 palavras.
+  - **Conteúdo:** 1 ideia por bloco (Texto e Subtexto).
   - **Fechamento:** O fechamento real da narrativa ocorre no texto 18.
   - **Fechamento:** O texto 19 e 20 é a direção levando o leitor a uma ação/reflexão.
 
@@ -292,11 +292,11 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 
 - **Regras de Contagem de Palavras:**
   - **Blocos:  **1 (*texto 1 e 2*), 2 (*texto 3 e 4*), 3 (*texto 5 e 6*)...
-  - **Bloco 1:** Texto 1* (título até 7 palavras caixa alta), *texto 2* (subtítulo até 10 palavras).
-  - **Bloco 2:** *Texto 3* (título até 6 palavras), *texto 4* (subtítulo 15 a 20 palavras).
-  - **Bloco 3:** *Texto 5* (título até 7 palavras), *texto 6* (subtítulo 15 a 20 palavras).
-  - **Bloco 4:** *Texto 7* (título até 6 palavras), *texto 8* (subtítulo 15 a 20 palavras).
-  - **Bloco 5:** *Texto 9* (título até 7 palavras), *texto 10* (subtítulo 15 a 20 palavras).
+  - **Bloco 1:** Texto 1* (título até 7 palavras caixa alta), *subtexto 2* (subtítulo até 10 palavras).
+  - **Bloco 2:** *Texto 3* (título até 6 palavras), *subtexto 4* (subtítulo 15 a 20 palavras).
+  - **Bloco 3:** *Texto 5* (título até 7 palavras), *subtexto 6* (subtítulo 15 a 20 palavras).
+  - **Bloco 4:** *Texto 7* (título até 6 palavras), *subtexto 8* (subtítulo 15 a 20 palavras).
+  - **Bloco 5:** *Texto 9* (título até 7 palavras), *subtexto 10* (subtítulo 15 a 20 palavras).
   - **Bloco 6-10:** Respeitar os textos conforme o contrato, sem inventar conteúdo.
 
 ### Template 3: Autoral (22 blocos)
@@ -324,16 +324,16 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
   - **Foco:** Desenvolver um argumento de forma mais completa e detalhada ao longo dos blocos.
 
 
-### Estrutura visível para entrega do conteúdo:
+### Estrutura visível para entrega do conteúdo (Markdown):
 
 TEXTO 1 CAIXA ALTA, ÚNICA LINHA, QUANTIDADE DE PALAVRAS ESTABELECIDA ANTERIORMENTE
-(pular linha)
-Texto 2, uma linha, com a quantidade de palavras estabelecidas
+Subtexto 2, uma linha, com a quantidade de palavras estabelecidas
 (pular linha)
 Texto 3, uma linha, com quantidade de palavras estabelecidas
+Subtexto 4, uma linha, com a quantidade de palavras estabelecidas
 (pular linha)
-Texto 4, uma linha, com a quantidade de palavras estabelecidas
-(pular linha)
+Texto 5, uma linha, com quantidade de palavras estabelecidas
+Subtexto 6, uma linha, com a quantidade de palavras estabelecidas
 ...
 (Continuação estruturada até completar 20 textos e intercalando com linhas em branco)
 
