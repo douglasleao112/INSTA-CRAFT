@@ -364,7 +364,7 @@ export default function App() {
   <div>
     <h1 className="font-extrabold text-lg tracking-tight">
       <span>Insta</span>
-      <span className="text-[#4f39f6]">Craft</span>
+      <span className="text-[#4f39f6]">CRAFT</span> 
     </h1>
   </div>
 </div>

@@ -242,7 +242,7 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
       </div>
 
       {/* Color Group */}
-      <div className="flex items-center gap-0.5 px-1 border-r border-black/5">
+    <div className="flex items-center gap-0.5 px-1">
         {/* Text Color */}
         <div className="relative">
           <ToolbarButton 

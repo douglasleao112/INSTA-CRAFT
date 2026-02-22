@@ -73,7 +73,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: 'Olá, vamos começar?' }
+    { role: 'model', text: '🔮 Olá, vamos começar?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -86,6 +86,37 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // ✅ garante homePosition para não "perder" a assinatura ao reativar
+useEffect(() => {
+  const sigs = config.branding.signatures;
+
+  let changed = false;
+
+  const nextSignatures = Object.fromEntries(
+    Object.entries(sigs).map(([k, slot]) => {
+      const s: any = slot;
+
+      if (!s.homePosition) {
+        changed = true;
+        return [k, { ...s, homePosition: { ...s.position } }];
+      }
+
+      return [k, s];
+    })
+  );
+
+  if (changed) {
+    updateConfig({
+      branding: {
+        ...config.branding,
+        signatures: nextSignatures as any
+      }
+    });
+  }
+  // roda só ao montar
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -149,11 +180,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     }
   };
 
-  const handleBrandingChange = (key: keyof Branding, value: any) => {
-    updateConfig({
-      branding: { ...config.branding, [key]: value }
-    });
-  };
+const handleBrandingChange = (key: keyof Branding, value: any) => {
+  updateConfig({
+    branding: { ...config.branding, [key]: value }
+  });
+};
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -510,10 +541,35 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
             return (
               <button
                 key={key}
-                onClick={() => handleBrandingChange('signatures', {
-                  ...config.branding.signatures,
-                  [key]: { ...slot, enabled: !slot.enabled }
-                })}
+                onClick={() => {
+  const willEnable = !slot.enabled;
+
+  const resetPos = (slot as any).homePosition ?? slot.position;
+
+  handleBrandingChange('signatures', {
+    ...config.branding.signatures,
+    [key]: {
+      ...slot,
+      enabled: willEnable,
+      ...(willEnable ? { position: { ...resetPos } } : {})
+    }
+  });
+
+  // ✅ se não for global, limpa override por slide (evita voltar bugado)
+  if (willEnable && !config.isGlobalBranding) {
+    const newSlides = config.slides.map((sl) => {
+      if (!sl.signaturePositions) return sl;
+      if (!(key in sl.signaturePositions)) return sl;
+
+      const nextSP = { ...sl.signaturePositions } as any;
+      delete nextSP[key];
+
+      return { ...sl, signaturePositions: nextSP };
+    });
+
+    updateConfig({ slides: newSlides });
+  }
+}}
                 className={cn(
                   "aspect-square flex items-center justify-center border rounded-xl transition-all",
                   slot.enabled
