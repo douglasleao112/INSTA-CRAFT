@@ -23,6 +23,7 @@ interface TextToolbarProps {
 
 export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
   const [showFormatting, setShowFormatting] = React.useState(false);
+  const [showFontFamily, setShowFontFamily] = React.useState(false);
   const [showAlignment, setShowAlignment] = React.useState(false);
   const [showFontSize, setShowFontSize] = React.useState(false);
   const [showTransform, setShowTransform] = React.useState(false);
@@ -76,66 +77,52 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
       )}
       onMouseDown={(e) => e.preventDefault()} // Prevent losing focus on click
     >
-      {/* Font Selection */}
-      <div className="relative group border-r border-black/5">
-        <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors">
-          <span className="text-xs font-bold text-gray-700">Inter</span>
-          <ChevronDown className="w-3 h-3 text-gray-400" />
-        </button>
-        <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-black/10 shadow-xl rounded-xl hidden group-hover:block overflow-hidden z-50">
-          {['Inter', 'Plus Jakarta Sans', 'Playfair Display', 'JetBrains Mono', 'Impact', 'Comic Sans MS', 'Arial', 'Times New Roman'].map(font => (
-            <button 
-              key={font}
-              onClick={() => exec('fontName', font)}
-              className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-black/5 transition-colors"
-              style={{ fontFamily: font }}
-            >
-              {font}
-            </button>
-          ))}
-        </div>
-      </div>
+{/* Font Selection */}
+<div className="relative border-r border-black/5">
+  <button
+    onClick={() => setShowFontFamily(!showFontFamily)}
+    className={cn(
+      "flex items-center gap-2 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
+      showFontFamily && "bg-black/5"
+    )}
+  >
+    <span className="text-xs font-bold text-gray-700">Inter</span>
+    <ChevronDown
+      className={cn(
+        "w-3 h-3 text-gray-400 transition-transform",
+        showFontFamily && "rotate-180"
+      )}
+    />
+  </button>
 
-      {/* Font Size - Custom Dropdown */}
-      <div className="relative border-r border-black/5">
-        <button 
-          onClick={() => setShowFontSize(!showFontSize)}
-          className={cn(
-            "flex items-center gap-1 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
-            showFontSize && "bg-black/5"
-          )}
-        >
-          <Type className="w-3.5 h-3.5 text-gray-400" />
-          <span className="text-xs font-bold text-gray-700">32px</span>
-          <ChevronDown className={cn("w-3 h-3 text-gray-400 transition-transform", showFontSize && "rotate-180")} />
-        </button>
-        <AnimatePresence>
-          {showFontSize && (
-            <motion.div 
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 5 }}
-              className="absolute top-full left-0 mt-2 w-20 bg-white border border-black/10 shadow-xl rounded-xl flex flex-col p-1 gap-1 z-50 overflow-hidden"
-            >
-              {[1, 2, 3, 4, 5, 6, 7].map(size => (
-                <button
-                  key={size}
-                  onClick={() => {
-                    exec('fontSize', size.toString());
-                    setShowFontSize(false);
-                  }}
-                  className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-gray-700 hover:bg-black/5 rounded-lg transition-colors"
-                >
-                  {size * 8}px
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+  <AnimatePresence>
+    {showFontFamily && (
+      <motion.div
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 5 }}
+        className="absolute top-full left-0 mt-2 w-48 bg-white border border-black/10 shadow-xl rounded-xl overflow-hidden z-50"
+      >
+        {['Inter', 'Plus Jakarta Sans', 'Playfair Display', 'JetBrains Mono', 'Impact', 'Comic Sans MS', 'Arial', 'Times New Roman'].map(font => (
+          <button
+            key={font}
+            onClick={() => {
+              exec('fontName', font);
+              setShowFontFamily(false);
+            }}
+            className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-black/5 transition-colors"
+            style={{ fontFamily: font }}
+          >
+            {font}
+          </button>
+        ))}
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
 
-      {/* Formatting Group - Dropdown */}
-      <div className="relative border-r border-black/5">
+        {/* Formatting Group - Dropdown */}
+      <div className="relative ">
         <button 
           onClick={() => setShowFormatting(!showFormatting)}
           className={cn(
@@ -164,7 +151,7 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
       </div>
 
       {/* Text Transformation Group - Dropdown */}
-      <div className="relative border-r border-black/5">
+      <div className="relative">
         <button 
           onClick={() => setShowTransform(!showTransform)}
           className={cn(
