@@ -20,7 +20,10 @@ import {
   Check,
   RotateCcw,
   Pin,
-  PinOff
+  PinOff,
+  Minimize2,
+  CircleMinus,
+  RectangleVertical
 } from 'lucide-react';
 import { AspectRatio, LayoutType, Branding, SlideData, SignatureSlot } from '../types';
 import { cn } from '../lib/utils';
@@ -42,10 +45,10 @@ interface ControlPanelProps {
   };
   updateConfig: (updates: any) => void;
   generateSlides: () => void;
-  onReset?: () => void;
+  onClearImages?: () => void;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig, generateSlides, onReset }) => {
+export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig, generateSlides, onClearImages }) => {
   const [activeTab, setActiveTab] = useState<'ideia' | 'branding' | 'content' | 'fotos'>('ideia');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -79,20 +82,54 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ config, updateConfig
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const chat = ai.chats.create({
-        model: "gemini-3.1-pro-preview",
-        config: {
-          systemInstruction: ENGINE_PROMPT,
-        },
-        history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
+      // Try backend API (OpenAI/GPT) first
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: ENGINE_PROMPT },
+            ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
+            { role: 'user', content: userMessage }
+          ]
+        })
       });
 
-      const result = await chat.sendMessage({ message: userMessage });
-      setMessages(prev => [...prev, { role: 'model', text: result.text || 'Desculpe, não consegui processar sua solicitação.' }]);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(prev => [...prev, { role: 'model', text: data.text || 'Desculpe, não consegui processar sua solicitação.' }]);
+      } else {
+        // Fallback to Gemini if backend fails or is not configured
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const chat = ai.chats.create({
+          model: "gemini-3.1-pro-preview",
+          config: {
+            systemInstruction: ENGINE_PROMPT,
+          },
+          history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
+        });
+
+        const result = await chat.sendMessage({ message: userMessage });
+        setMessages(prev => [...prev, { role: 'model', text: result.text || 'Desculpe, não consegui processar sua solicitação.' }]);
+      }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Erro ao conectar com a inteligência artificial. Tente novamente.' }]);
+      // Final fallback to Gemini on network error to backend
+      try {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const chat = ai.chats.create({
+          model: "gemini-3.1-pro-preview",
+          config: {
+            systemInstruction: ENGINE_PROMPT,
+          },
+          history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
+        });
+
+        const result = await chat.sendMessage({ message: userMessage });
+        setMessages(prev => [...prev, { role: 'model', text: result.text || 'Desculpe, não consegui processar sua solicitação.' }]);
+      } catch (geminiError) {
+        setMessages(prev => [...prev, { role: 'model', text: 'Erro ao conectar com a inteligência artificial. Tente novamente.' }]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -171,34 +208,45 @@ const shouldShowAvatarSection = activeTextSignatures.some((s: any) => !!s?.showA
 const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFrame);
 
 
+  const panelVariants = {
+    pinned: {
+      x: '-50%',
+      y: '-50%',
+      left: '50%',
+      top: '50%',
+      width: isMinimized ? '64px' : '90%',
+      maxWidth: isMinimized ? '64px' : '1000px',
+      height: isMinimized ? '64px' : 'auto',
+      borderRadius: '24px',
+    },
+    unpinned: {
+      x: 0,
+      y: 0,
+      left: '40px',
+      top: '80px',
+      width: isMinimized ? '64px' : '320px',
+      maxWidth: isMinimized ? '64px' : '320px',
+      height: isMinimized ? '64px' : 'auto',
+      borderRadius: '24px',
+    }
+  };
+
   return (
     <motion.div
       drag={!isPinned}
       dragMomentum={false}
       dragTransition={{ power: 0 }}
-      animate={isPinned ? { 
-        x: '-50%', 
-        left: '50%',
-        top: 0,
-        width: isMinimized ? '56px' : '90%',
-        maxWidth: isMinimized ? '56px' : '1000px',
-        borderRadius: isMinimized ? '24px' : '0 0 24px 24px'
-      } : { 
-        x: 0,
-        left: '40px',
-        top: '80px',
-        width: isMinimized ? '56px' : '320px',
-        borderRadius: isMinimized ? '24px' : '24px'
-      }}
-      className={cn(
-        "fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden transition-all duration-300",
-        isMinimized ? "h-14" : ""
-      )}
+      initial={false}
+      animate={isPinned ? "pinned" : "unpinned"}
+      variants={panelVariants}
+      transition={{ type: 'spring', damping: 30, stiffness: 250 }}
+      className="fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden"
     >
       {/* Header */}
       <div className={cn(
         "flex items-center justify-between p-4 border-b border-black/5 bg-white/50",
-        !isPinned ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+        !isPinned ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+        isMinimized && "border-none p-2 justify-center h-full"
       )}>
         {!isMinimized && (
           <div className="flex items-center gap-2">
@@ -208,19 +256,19 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
           </div>
         )}
         
-        <div className="flex items-center gap-1">
+        <div className={cn("flex items-center gap-1", isMinimized && "flex-col")}>
           {!isMinimized && (
             <>
               <button 
-                onClick={onReset}
-                title="Resetar Workflow"
+                onClick={onClearImages}
+                title="Limpar Imagens"
                 className="p-1.5 hover:bg-black/5 rounded-lg transition-colors text-gray-400 hover:text-red-500"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
               <button 
                 onClick={() => setIsPinned(!isPinned)}
-                title={isPinned ? "Desafixar" : "Fixar no Topo"}
+                title={isPinned ? "Desafixar" : "Centralizar Painel"}
                 className={cn(
                   "p-1.5 rounded-lg transition-colors",
                   isPinned ? "bg-indigo-100 text-indigo-600" : "hover:bg-black/5 text-gray-400 hover:text-gray-600"
@@ -234,7 +282,11 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
             onClick={() => setIsMinimized(!isMinimized)}
             className="p-1.5 hover:bg-black/5 rounded-lg transition-colors"
           >
-            <Maximize2 className="w-4 h-4 text-gray-500" />
+            {isMinimized ? (
+              <Maximize2 className="w-5 h-5 text-gray-500" />
+            ) : (
+              <Minimize2 className="w-4 h-4 text-gray-500" />
+            )}
           </button>
         </div>
       </div>
@@ -510,9 +562,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
                           onChange={(e) => updateSlot({ name: e.target.value })}
                           className="w-full px-4 py-2.5 rounded-xl border border-black/5 bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-indigo-500/20"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-gray-300 uppercase">
-                          10px
-                        </span>
+                     
                       </div>
 
                       <div className="relative">
@@ -523,9 +573,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
                           onChange={(e) => updateSlot({ handle: e.target.value })}
                           className="w-full px-4 py-2.5 rounded-xl border border-black/5 bg-white text-[12px] outline-none transition-all focus:ring-2 focus:ring-indigo-500/20"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-gray-300 uppercase">
-                          8px
-                        </span>
+                      
                       </div>
                     </div>
 

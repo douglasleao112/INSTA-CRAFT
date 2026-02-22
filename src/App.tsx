@@ -146,13 +146,13 @@ export default function App() {
     setConfig(prev => ({ ...prev, ...updates }));
   };
 
-  const resetToInitial = () => {
-    if (confirm('Deseja realmente resetar todas as configurações de branding?')) {
-      localStorage.removeItem(STORAGE_KEY);
-      setConfig({
-        ...INITIAL_CONFIG,
-        slides: config.slides // Keep current slides if any
-      });
+  const clearSlideImages = () => {
+    if (confirm('Deseja remover todas as imagens dos slides?')) {
+      const newSlides = config.slides.map(slide => ({
+        ...slide,
+        image: undefined
+      }));
+      updateConfig({ slides: newSlides });
     }
   };
 
@@ -346,7 +346,7 @@ export default function App() {
         config={config} 
         updateConfig={updateConfig} 
         generateSlides={generateSlides} 
-        onReset={resetToInitial}
+        onClearImages={clearSlideImages}
       />
 
       {/* Main Workspace Area */}
