@@ -57,6 +57,9 @@ export interface SlideData {
   image?: string;
   layout: LayoutType;
   backgroundColor?: string;
+  headlinePos?: { x: number; y: number };
+  subheadlinePos?: { x: number; y: number };
+  imagePos?: { x: number; y: number };
   signaturePositions?: {
     topLeft?: { x: number; y: number };
     topRight?: { x: number; y: number };

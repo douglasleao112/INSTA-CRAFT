@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AspectRatio, Branding, SlideData, LayoutType, SignatureSlot } from '../types';
 import { cn } from '../lib/utils';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, Trash2 } from 'lucide-react';
 import { TextToolbar } from './TextToolbar';
 
 const LAYOUTS: { type: LayoutType; label: string }[] = [
@@ -20,6 +20,9 @@ interface SlideProps {
   index: number;
   totalSlides: number;
   isGlobalBranding: boolean;
+  presets: (SlideData | null)[];
+  onSavePreset: (index: number, data: SlideData) => void;
+  onDeletePreset: (index: number) => void;
   onUpdate?: (updates: Partial<SlideData>) => void;
   onBrandingPositionChange?: (pos: { x: number; y: number }) => void;
   onBrandingUpdate?: (updates: Partial<Branding>) => void;
@@ -33,11 +36,15 @@ export const Slide: React.FC<SlideProps> = ({
   index, 
   totalSlides,
   isGlobalBranding,
+  presets,
+  onSavePreset,
+  onDeletePreset,
   onUpdate,
   onBrandingPositionChange,
   onBrandingUpdate,
   onEditingChange
 }) => {
+  const [activePresetIndex, setActivePresetIndex] = useState<number | null>(null);
   const [activeElement, setActiveElement] = useState<'headline' | 'subheadline' | 'branding-name' | 'branding-handle' | null>(null);
   const [editingBrandingField, setEditingBrandingField] = useState<null | 'name' | 'handle'>(null);
   const [editingSlotKey, setEditingSlotKey] = useState<keyof Branding['signatures'] | null>(null);
@@ -329,11 +336,23 @@ const cancelBrandingEdit = () => {
     // e se não estiver editando texto
     if (isFullBg || activeElement !== null) return;
     
+    // Se o clique veio de uma imagem, texto ou botão, não trocamos o fundo
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('img') || 
+      target.closest('h2') || 
+      target.closest('p') || 
+      target.closest('button')
+    ) {
+      return;
+    }
+    
     const currentBg = data.backgroundColor || branding.backgroundColor;
     const nextBg = currentBg === branding.backgroundColor 
       ? branding.alternativeBackgroundColor 
       : branding.backgroundColor;
     
+    setActivePresetIndex(null);
     onUpdate?.({ backgroundColor: nextBg });
   };
 
@@ -341,78 +360,108 @@ const cancelBrandingEdit = () => {
     const headlineColor = effectiveIsDark ? '#FFFFFF' : branding.primaryColor;
     const subheadlineColor = effectiveIsDark ? 'rgba(255, 255, 255, 0.9)' : branding.secondaryColor;
 
+    const hPos = data.headlinePos || { x: 0, y: 0 };
+    const sPos = data.subheadlinePos || { x: 0, y: 0 };
+    const iPos = data.imagePos || { x: 0, y: 0 };
+
     const headlineElement = (
-      <h2 
-        ref={headlineRef}
-        contentEditable={editingHeadline}
-        suppressContentEditableWarning
-        onPointerDown={(e) => e.stopPropagation()}
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          setEditingHeadline(true);
-          setActiveElement('headline');
-          onEditingChange?.(true);
-          // Focus after state update
-          setTimeout(() => headlineRef.current?.focus(), 0);
+      <motion.div
+        drag={!editingHeadline}
+        dragMomentum={false}
+        animate={{ x: hPos.x, y: hPos.y }}
+        onDragEnd={(_, info) => {
+          setActivePresetIndex(null);
+          onUpdate?.({ headlinePos: { x: hPos.x + info.offset.x, y: hPos.y + info.offset.y } });
         }}
-        onBlur={(e) => {
-          const text = e.currentTarget.innerText;
-          handleTextChange('headline', text);
-          setEditingHeadline(false);
-          setTimeout(() => {
-            setActiveElement(null);
-            onEditingChange?.(false);
-          }, 200);
-        }}
-        className={cn(
-          "text-2xl font-extrabold leading-tight mb-4 outline-none transition-all rounded-lg px-2 -mx-2",
-          editingHeadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5 cursor-default"
-        )}
-        style={{ 
-          color: headlineColor,
-          textShadow: isFullBg ? '0 2px 4px rgba(0,0,0,0.3)' : 'none'
-        }}
-        title="Duplo clique para editar"
+        className="z-30"
+        data-imageframe="true"
       >
-        {data.headline}
-      </h2>
+        <h2 
+          ref={headlineRef}
+          contentEditable={editingHeadline}
+          suppressContentEditableWarning
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            setEditingHeadline(true);
+            setActiveElement('headline');
+            onEditingChange?.(true);
+            // Focus after state update
+            setTimeout(() => headlineRef.current?.focus(), 0);
+          }}
+          onBlur={(e) => {
+            const text = e.currentTarget.innerText;
+            handleTextChange('headline', text);
+            setEditingHeadline(false);
+            setTimeout(() => {
+              setActiveElement(null);
+              onEditingChange?.(false);
+            }, 200);
+          }}
+          className={cn(
+            "text-2xl font-extrabold leading-tight mb-4 outline-none transition-all rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
+            editingHeadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5"
+          )}
+          style={{ 
+            color: headlineColor,
+            textShadow: isFullBg ? '0 2px 4px rgba(0,0,0,0.3)' : 'none'
+          }}
+          title="Arraste para mover | Duplo clique para editar"
+        >
+          {data.headline}
+        </h2>
+      </motion.div>
     );
 
     const subheadlineElement = (
-      <p 
-        ref={subheadlineRef}
-        contentEditable={editingSubheadline}
-        suppressContentEditableWarning
-        onPointerDown={(e) => e.stopPropagation()}
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          setEditingSubheadline(true);
-          setActiveElement('subheadline');
-          onEditingChange?.(true);
-          // Focus after state update
-          setTimeout(() => subheadlineRef.current?.focus(), 0);
+      <motion.div
+        drag={!editingSubheadline}
+        dragMomentum={false}
+        animate={{ x: sPos.x, y: sPos.y }}
+        onDragEnd={(_, info) => {
+          setActivePresetIndex(null);
+          onUpdate?.({ subheadlinePos: { x: sPos.x + info.offset.x, y: sPos.y + info.offset.y } });
         }}
-        onBlur={(e) => {
-          const text = e.currentTarget.innerText;
-          handleTextChange('subheadline', text);
-          setEditingSubheadline(false);
-          setTimeout(() => {
-            setActiveElement(null);
-            onEditingChange?.(false);
-          }, 200);
-        }}
-        className={cn(
-          "text-lg font-medium opacity-90 outline-none transition-all rounded-lg px-2 -mx-2",
-          editingSubheadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5 cursor-default"
-        )}
-        style={{ 
-          color: subheadlineColor,
-          textShadow: isFullBg ? '0 1px 2px rgba(0,0,0,0.3)' : 'none'
-        }}
-        title="Duplo clique para editar"
+        className="z-30"
+        data-imageframe="true"
       >
-        {data.subheadline}
-      </p>
+        <p 
+          ref={subheadlineRef}
+          contentEditable={editingSubheadline}
+          suppressContentEditableWarning
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            setEditingSubheadline(true);
+            setActiveElement('subheadline');
+            onEditingChange?.(true);
+            // Focus after state update
+            setTimeout(() => subheadlineRef.current?.focus(), 0);
+          }}
+          onBlur={(e) => {
+            const text = e.currentTarget.innerText;
+            handleTextChange('subheadline', text);
+            setEditingSubheadline(false);
+            setTimeout(() => {
+              setActiveElement(null);
+              onEditingChange?.(false);
+            }, 200);
+          }}
+          className={cn(
+            "text-lg font-medium opacity-90 outline-none transition-all rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
+            editingSubheadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5"
+          )}
+          style={{ 
+            color: subheadlineColor,
+            textShadow: isFullBg ? '0 1px 2px rgba(0,0,0,0.3)' : 'none'
+          }}
+          title="Arraste para mover | Duplo clique para editar"
+        >
+          {data.subheadline}
+        </p>
+      </motion.div>
     );
 
     switch (data.layout) {
@@ -421,16 +470,27 @@ case 'full-bg':
   return (
     <div
       className="relative w-full h-full overflow-hidden cursor-pointer"
-      onClick={pickSlideImage}
+      onClick={(e) => {
+        e.stopPropagation();
+        pickSlideImage();
+      }}
       title="Clique para trocar a imagem"
     >
       {/* Imagem (se existir) */}
       {data.image ? (
-        <img
+        <motion.img
+          drag
+          dragMomentum={false}
+          animate={{ x: iPos.x, y: iPos.y }}
+          onDragEnd={(_, info) => {
+            setActivePresetIndex(null);
+            onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
+          }}
           src={data.image}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover cursor-grab active:cursor-grabbing"
           alt=""
           draggable={false}
+          data-imageframe="true"
         />
       ) : (
         <div className="absolute inset-0 bg-black/5 flex items-center justify-center text-gray-300">
@@ -469,16 +529,30 @@ case 'text-top-img-bottom':
       </div>
 
       {/* 🔥 IMAGEM MENOR */}
-<div className="h-[50%] overflow-hidden shadow-2xl" style={imgWrapStyle}>
+<motion.div 
+  drag
+  dragMomentum={false}
+  animate={{ x: iPos.x, y: iPos.y }}
+  onDragEnd={(_, info) => {
+    setActivePresetIndex(null);
+    onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
+  }}
+  className="h-[50%] overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+  style={imgWrapStyle}
+  data-imageframe="true"
+>
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={pickSlideImage}
+    onClick={(e) => {
+      e.stopPropagation();
+      pickSlideImage();
+    }}
     title="Clique para trocar a imagem"
   >
     {data.image ? (
      <img
   src={data.image}
-  className="w-full h-full object-cover"
+  className="w-full h-full object-cover pointer-events-none"
   style={imgStyle}
   alt=""
   draggable={false}
@@ -495,7 +569,7 @@ case 'text-top-img-bottom':
       </span>
     </div>
   </div>
-</div>
+</motion.div>
     </div>
   );
 
@@ -503,16 +577,30 @@ case 'text-top-img-bottom':
        return (
   <div className="flex flex-col w-full h-full px-6 py-6 gap-8">
                     
-    <div className="h-[50%] mt-5 overflow-hidden shadow-2xl" style={imgWrapStyle}>
+    <motion.div 
+      drag
+      dragMomentum={false}
+      animate={{ x: iPos.x, y: iPos.y }}
+      onDragEnd={(_, info) => {
+        setActivePresetIndex(null);
+        onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
+      }}
+      className="h-[50%] mt-5 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+      style={imgWrapStyle}
+      data-imageframe="true"
+    >
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={pickSlideImage}
+    onClick={(e) => {
+      e.stopPropagation();
+      pickSlideImage();
+    }}
     title="Clique para trocar a imagem"
   >
     {data.image ? (
     <img
   src={data.image}
-  className="w-full h-full object-cover"
+  className="w-full h-full object-cover pointer-events-none"
   style={imgStyle}
   alt=""
   draggable={false}
@@ -529,7 +617,7 @@ case 'text-top-img-bottom':
       </span>
     </div>
   </div>
-</div>
+</motion.div>
            <div className="flex-shrink-0">
               {headlineElement}
               {subheadlineElement}
@@ -544,16 +632,30 @@ case 'text-top-img-bottom':
               {headlineElement}
               {subheadlineElement}
             </div>
-<div className="flex-1 overflow-hidden shadow-2xl" style={imgWrapStyle}>
+<motion.div 
+  drag
+  dragMomentum={false}
+  animate={{ x: iPos.x, y: iPos.y }}
+  onDragEnd={(_, info) => {
+    setActivePresetIndex(null);
+    onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
+  }}
+  className="flex-1 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+  style={imgWrapStyle}
+  data-imageframe="true"
+>
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={pickSlideImage}
+    onClick={(e) => {
+      e.stopPropagation();
+      pickSlideImage();
+    }}
     title="Clique para trocar a imagem"
   >
     {data.image ? (
 <img
   src={data.image}
-  className="w-full h-full object-cover"
+  className="w-full h-full object-cover pointer-events-none"
   style={imgStyle}
   alt=""
   draggable={false}
@@ -571,7 +673,7 @@ case 'text-top-img-bottom':
       </span>
     </div>
   </div>
-</div>
+</motion.div>
           </div>
         );
 case 'headline-img-subheadline':
@@ -583,16 +685,30 @@ case 'headline-img-subheadline':
         {headlineElement}
       </div>
 
-<div className="h-[50%] overflow-hidden shadow-2xl" style={imgWrapStyle}>
+<motion.div 
+  drag
+  dragMomentum={false}
+  animate={{ x: iPos.x, y: iPos.y }}
+  onDragEnd={(_, info) => {
+    setActivePresetIndex(null);
+    onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
+  }}
+  className="h-[50%] overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+  style={imgWrapStyle}
+  data-imageframe="true"
+>
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={pickSlideImage}
+    onClick={(e) => {
+      e.stopPropagation();
+      pickSlideImage();
+    }}
     title="Clique para trocar a imagem"
   >
     {data.image ? (
    <img
   src={data.image}
-  className="w-full h-full object-cover"
+  className="w-full h-full object-cover pointer-events-none"
   style={imgStyle}
   alt=""
   draggable={false}
@@ -609,7 +725,7 @@ case 'headline-img-subheadline':
       </span>
     </div>
   </div>
-</div>
+</motion.div>
       <div className="text-left">
         {subheadlineElement}
       </div>
@@ -655,61 +771,113 @@ case 'headline-img-subheadline':
       </div>
 
       {/* Layout Switcher - Outside and Smaller */}
-      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 z-40 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 flex gap-1.5 bg-white/95 backdrop-blur-sm p-1.5 rounded-xl shadow-xl border border-black/5">
-        {LAYOUTS.map((layout) => (
-          <button
-            key={layout.type}
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpdate?.({ layout: layout.type });
-            }}
-            className={cn(
-              "w-8 h-8 rounded-lg border-2 transition-all flex flex-col items-center justify-center p-1 group/btn",
-              data.layout === layout.type 
-                ? "border-indigo-500 bg-indigo-50" 
-                : "border-transparent hover:bg-black/5"
-            )}
-            title={layout.label}
-          >
-            <div className="w-full h-full flex flex-col gap-0.5 overflow-hidden">
-              {layout.type === 'full-bg' && (
-                <div className="w-full h-full bg-slate-200 rounded-sm relative">
-                  <div className="absolute bottom-0.5 left-0.5 right-0.5 h-0.5 bg-slate-400 rounded-full" />
-                </div>
+      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 z-40 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 flex flex-col items-center gap-3">
+        <div className="flex gap-1.5 bg-white/95 backdrop-blur-sm p-1.5 rounded-xl shadow-xl border border-black/5">
+          {LAYOUTS.map((layout) => (
+            <button
+              key={layout.type}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActivePresetIndex(null);
+                onUpdate?.({ layout: layout.type });
+              }}
+              className={cn(
+                "w-8 h-8 rounded-lg border-2 transition-all flex flex-col items-center justify-center p-1 group/btn",
+                (data.layout === layout.type && activePresetIndex === null)
+                  ? "border-indigo-500 bg-indigo-50" 
+                  : "border-transparent hover:bg-black/5"
               )}
-              {layout.type === 'text-top-img-bottom' && (
-                <>
-                  <div className="w-full h-0.5 bg-slate-400 rounded-full" />
-                  <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
-                  <div className="w-full flex-1 bg-slate-200 rounded-sm mt-0.5" />
-                </>
-              )}
-              {layout.type === 'img-top-text-bottom' && (
-                <>
-                  <div className="w-full flex-1 bg-slate-200 rounded-sm mb-0.5" />
-                  <div className="w-full h-0.5 bg-slate-400 rounded-full" />
-                  <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
-                </>
-              )}
-              {layout.type === 'img-right-text-left' && (
-                <div className="flex gap-0.5 h-full w-full">
-                  <div className="flex-1 flex flex-col gap-0.5 justify-center">
+              title={layout.label}
+            >
+              <div className="w-full h-full flex flex-col gap-0.5 overflow-hidden">
+                {layout.type === 'full-bg' && (
+                  <div className="w-full h-full bg-slate-200 rounded-sm relative">
+                    <div className="absolute bottom-0.5 left-0.5 right-0.5 h-0.5 bg-slate-400 rounded-full" />
+                  </div>
+                )}
+                {layout.type === 'text-top-img-bottom' && (
+                  <>
                     <div className="w-full h-0.5 bg-slate-400 rounded-full" />
                     <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
+                    <div className="w-full flex-1 bg-slate-200 rounded-sm mt-0.5" />
+                  </>
+                )}
+                {layout.type === 'img-top-text-bottom' && (
+                  <>
+                    <div className="w-full flex-1 bg-slate-200 rounded-sm mb-0.5" />
+                    <div className="w-full h-0.5 bg-slate-400 rounded-full" />
+                    <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
+                  </>
+                )}
+                {layout.type === 'img-right-text-left' && (
+                  <div className="flex gap-0.5 h-full w-full">
+                    <div className="flex-1 flex flex-col gap-0.5 justify-center">
+                      <div className="w-full h-0.5 bg-slate-400 rounded-full" />
+                      <div className="w-2/3 h-0.5 bg-slate-300 rounded-full" />
+                    </div>
+                    <div className="w-1/3 bg-slate-200 rounded-sm" />
                   </div>
-                  <div className="w-1/3 bg-slate-200 rounded-sm" />
+                )}
+                {layout.type === 'headline-img-subheadline' && (
+                  <>
+                    <div className="w-full h-0.5 bg-slate-400 rounded-full" />
+                    <div className="w-full flex-1 bg-slate-200 rounded-sm my-0.5" />
+                    <div className="w-full h-0.5 bg-slate-300 rounded-full" />
+                  </>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Preset Slots */}
+        <div className="flex gap-2">
+          {presets.map((preset, i) => (
+            <button
+              key={i}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (preset) {
+                  setActivePresetIndex(i);
+                  onUpdate?.({
+                    layout: preset.layout,
+                    headlinePos: preset.headlinePos,
+                    subheadlinePos: preset.subheadlinePos,
+                    imagePos: preset.imagePos,
+                    backgroundColor: preset.backgroundColor
+                  });
+                } else {
+                  setActivePresetIndex(i);
+                  onSavePreset(i, data);
+                }
+              }}
+              className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold transition-all relative group/preset border-2",
+                activePresetIndex === i
+                  ? "border-indigo-500 bg-indigo-50 text-indigo-600 shadow-md"
+                  : preset 
+                    ? "bg-gray-100 text-gray-500 border-transparent hover:bg-gray-200" 
+                    : "border-dashed border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500"
+              )}
+              title={preset ? "Aplicar Favorito" : "Salvar como Favorito"}
+            >
+              {i + 1}
+              {preset && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (activePresetIndex === i) setActivePresetIndex(null);
+                    onDeletePreset(i);
+                  }}
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/preset:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                  title="Excluir Favorito"
+                >
+                  <Trash2 className="w-2.5 h-2.5" />
                 </div>
               )}
-              {layout.type === 'headline-img-subheadline' && (
-                <>
-                  <div className="w-full h-0.5 bg-slate-400 rounded-full" />
-                  <div className="w-full flex-1 bg-slate-200 rounded-sm my-0.5" />
-                  <div className="w-full h-0.5 bg-slate-300 rounded-full" />
-                </>
-              )}
-            </div>
-          </button>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -11,7 +11,8 @@ import {
   Highlighter, 
   ChevronDown,
   Type,
-  Plus
+  Plus,
+  CaseSensitive
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -24,6 +25,7 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
   const [showFormatting, setShowFormatting] = React.useState(false);
   const [showAlignment, setShowAlignment] = React.useState(false);
   const [showFontSize, setShowFontSize] = React.useState(false);
+  const [showTransform, setShowTransform] = React.useState(false);
   const [showTextColor, setShowTextColor] = React.useState(false);
   const [showHighlightColor, setShowHighlightColor] = React.useState(false);
   const textColorInputRef = React.useRef<HTMLInputElement>(null);
@@ -47,6 +49,23 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
     }
   };
 
+  const transformText = (type: 'uppercase' | 'lowercase' | 'capitalize') => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const text = selection.toString();
+    if (!text) return;
+
+    let transformed = text;
+    if (type === 'uppercase') transformed = text.toUpperCase();
+    else if (type === 'lowercase') transformed = text.toLowerCase();
+    else if (type === 'capitalize') {
+      transformed = text.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+    
+    document.execCommand('insertText', false, transformed);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -64,7 +83,7 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
           <ChevronDown className="w-3 h-3 text-gray-400" />
         </button>
         <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-black/10 shadow-xl rounded-xl hidden group-hover:block overflow-hidden z-50">
-          {['Inter', 'Plus Jakarta Sans', 'Playfair Display', 'JetBrains Mono'].map(font => (
+          {['Inter', 'Plus Jakarta Sans', 'Playfair Display', 'JetBrains Mono', 'Impact', 'Comic Sans MS', 'Arial', 'Times New Roman'].map(font => (
             <button 
               key={font}
               onClick={() => exec('fontName', font)}
@@ -139,6 +158,52 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
               <ToolbarButton icon={Italic} onClick={() => { exec('italic'); setShowFormatting(false); }} />
               <ToolbarButton icon={Underline} onClick={() => { exec('underline'); setShowFormatting(false); }} />
               <ToolbarButton icon={Strikethrough} onClick={() => { exec('strikeThrough'); setShowFormatting(false); }} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Text Transformation Group - Dropdown */}
+      <div className="relative border-r border-black/5">
+        <button 
+          onClick={() => setShowTransform(!showTransform)}
+          className={cn(
+            "flex items-center gap-1 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
+            showTransform && "bg-black/5"
+          )}
+        >
+          <span className="text-sm font-bold text-gray-700 select-none">Tt</span>
+          <ChevronDown className={cn("w-3 h-3 text-gray-400 transition-transform", showTransform && "rotate-180")} />
+        </button>
+        <AnimatePresence>
+          {showTransform && (
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute top-full left-0 mt-2 w-12 bg-white border border-black/10 shadow-xl rounded-xl flex flex-col items-center p-1 gap-1 z-50"
+            >
+              <button 
+                onClick={() => { transformText('uppercase'); setShowTransform(false); }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-xs font-bold text-gray-700"
+                title="MAIÚSCULAS"
+              >
+                TT
+              </button>
+              <button 
+                onClick={() => { transformText('lowercase'); setShowTransform(false); }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-xs font-medium text-gray-700"
+                title="minúsculas"
+              >
+                tt
+              </button>
+              <button 
+                onClick={() => { transformText('capitalize'); setShowTransform(false); }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-xs font-semibold text-gray-700"
+                title="Primeira Maiúscula"
+              >
+                Tt
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
