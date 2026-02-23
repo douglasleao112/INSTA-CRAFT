@@ -24,12 +24,11 @@ interface SlideProps {
   onSavePreset: (index: number, data: SlideData) => void;
   onDeletePreset: (index: number) => void;
   onUpdate?: (updates: Partial<SlideData>) => void;
-  onBrandingPositionChange?: (pos: { x: number; y: number }) => void;
   onBrandingUpdate?: (updates: Partial<Branding>) => void;
   onEditingChange?: (isEditing: boolean) => void;
 }
 
-export const Slide: React.FC<SlideProps> = ({ 
+export const Slide = React.memo<SlideProps>(({ 
   data, 
   branding, 
   aspectRatio, 
@@ -40,7 +39,6 @@ export const Slide: React.FC<SlideProps> = ({
   onSavePreset,
   onDeletePreset,
   onUpdate,
-  onBrandingPositionChange,
   onBrandingUpdate,
   onEditingChange
 }) => {
@@ -165,8 +163,9 @@ const cancelBrandingEdit = () => {
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
+        data-imageframe="true"
         className={cn(
-          "absolute top-5 left-7 z-20 flex items-center gap-3 cursor-grab active:cursor-grabbing transition-all",
+          "absolute top-5 left-7 z-20 flex items-center gap-3 cursor-grab active:cursor-grabbing",
           slot.showFrame ? "p-2.5 border" : "p-0"
         )}
         style={{
@@ -404,7 +403,7 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
             }, 200);
           }}
           className={cn(
-            "text-2xl font-extrabold leading-tight mb-4 outline-none transition-all rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
+            "text-2xl font-extrabold leading-tight mb-4 outline-none rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
             editingHeadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5"
           )}
           style={{ 
@@ -454,7 +453,7 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
             }, 200);
           }}
           className={cn(
-            "text-lg font-medium opacity-90 outline-none transition-all rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
+            "text-lg font-medium opacity-90 outline-none rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
             editingSubheadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5"
           )}
           style={{ 
@@ -946,4 +945,4 @@ onDoubleClick={(e) => {
 
     </div>
   );
-};
+});

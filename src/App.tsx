@@ -147,22 +147,26 @@ export default function App() {
     return saved ? JSON.parse(saved) : Array(5).fill(null);
   });
 
-  const savePreset = (slotIndex: number, data: SlideData) => {
-    const newPresets = [...presets];
-    newPresets[slotIndex] = { 
-      ...data, 
-      id: `preset-${slotIndex}`,
-    };
-    setPresets(newPresets);
-    localStorage.setItem('slide-presets', JSON.stringify(newPresets));
-  };
+  const savePreset = React.useCallback((slotIndex: number, data: SlideData) => {
+    setPresets(prev => {
+      const newPresets = [...prev];
+      newPresets[slotIndex] = { 
+        ...data, 
+        id: `preset-${slotIndex}`,
+      };
+      localStorage.setItem('slide-presets', JSON.stringify(newPresets));
+      return newPresets;
+    });
+  }, []);
 
-  const deletePreset = (slotIndex: number) => {
-    const newPresets = [...presets];
-    newPresets[slotIndex] = null;
-    setPresets(newPresets);
-    localStorage.setItem('slide-presets', JSON.stringify(newPresets));
-  };
+  const deletePreset = React.useCallback((slotIndex: number) => {
+    setPresets(prev => {
+      const newPresets = [...prev];
+      newPresets[slotIndex] = null;
+      localStorage.setItem('slide-presets', JSON.stringify(newPresets));
+      return newPresets;
+    });
+  }, []);
 
   const workspaceRef = useRef<HTMLElement | null>(null);
 
@@ -176,44 +180,38 @@ export default function App() {
     }));
   }, [config.branding, config.isGlobalBranding, config.aspectRatio, config.slideCount]);
 
-  const updateConfig = (updates: Partial<CarouselConfig>) => {
+  const updateConfig = React.useCallback((updates: Partial<CarouselConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
-  };
+  }, []);
 
-  const clearSlideImages = () => {
+  const clearSlideImages = React.useCallback(() => {
     if (confirm('Deseja remover todas as imagens dos slides?')) {
-      const newSlides = config.slides.map(slide => ({
-        ...slide,
-        image: undefined
-      }));
-      updateConfig({ slides: newSlides });
+      setConfig(prev => {
+        const newSlides = prev.slides.map(slide => ({
+          ...slide,
+          image: undefined
+        }));
+        return { ...prev, slides: newSlides };
+      });
     }
-  };
+  }, []);
 
+  const resetConfigs = React.useCallback(() => {
+    const ok = confirm('Resetar configurações? Isso vai apagar o localStorage e voltar ao padrão.');
+    if (!ok) return;
 
-  const resetConfigs = () => {
-  const ok = confirm('Resetar configurações? Isso vai apagar o localStorage e voltar ao padrão.');
-  if (!ok) return;
-
-  // apaga somente o que é do app (mais seguro do que localStorage.clear())
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem('slide-presets');
-
-  // limpa imagens em memória
-  setUploadedImages([]);
-
-  // volta config padrão e zera slides
-  setConfig({ ...INITIAL_CONFIG, slides: [] });
-
-  // opcional: resetar view também
-  setWorkspacePos({ x: 0, y: 0 });
-  setZoom(1);
-};
-
-  const resetView = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('slide-presets');
+    setUploadedImages([]);
+    setConfig({ ...INITIAL_CONFIG, slides: [] });
     setWorkspacePos({ x: 0, y: 0 });
     setZoom(1);
-  };
+  }, []);
+
+  const resetView = React.useCallback(() => {
+    setWorkspacePos({ x: 0, y: 0 });
+    setZoom(1);
+  }, []);
 
   const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
@@ -357,6 +355,21 @@ export default function App() {
     }
   };
 
+  const handleSlideUpdate = React.useCallback((index: number, updates: Partial<SlideData>) => {
+    setConfig(prev => {
+      const newSlides = [...prev.slides];
+      newSlides[index] = { ...newSlides[index], ...updates };
+      return { ...prev, slides: newSlides };
+    });
+  }, []);
+
+  const handleBrandingUpdate = React.useCallback((updates: Partial<CarouselConfig['branding']>) => {
+    setConfig(prev => ({
+      ...prev,
+      branding: { ...prev.branding, ...updates }
+    }));
+  }, []);
+
   return (
     <div className="h-screen w-full bg-[#F8F9FA] workspace-grid relative overflow-hidden font-sans">
       <AnimatePresence>
@@ -497,7 +510,14 @@ export default function App() {
       >
 <motion.div
   animate={{ x: workspacePos.x, y: workspacePos.y, scale: zoom }}
- className="grid grid-cols-5 gap-x-10 gap-y-16 px-4 min-w-max origin-top-left"
+  transition={{
+    type: "spring",
+    stiffness: 400,
+    damping: 40,
+    mass: 0.5,
+    restDelta: 0.001
+  }}
+  className="grid grid-cols-5 gap-x-10 gap-y-16 px-4 min-w-max origin-top-left"
   style={{ transformOrigin: '0 0' }}
 >
   {config.slides.map((slide, index) => (
@@ -515,21 +535,8 @@ export default function App() {
         presets={presets}
         onSavePreset={savePreset}
         onDeletePreset={deletePreset}
-        onUpdate={(updates) => {
-          const newSlides = [...config.slides];
-          newSlides[index] = { ...newSlides[index], ...updates };
-          updateConfig({ slides: newSlides });
-        }}
-        onBrandingPositionChange={(pos) => {
-          updateConfig({
-            branding: { ...config.branding, handlePosition: pos }
-          });
-        }}
-        onBrandingUpdate={(updates) => {
-          updateConfig({
-            branding: { ...config.branding, ...updates }
-          });
-        }}
+        onUpdate={(updates) => handleSlideUpdate(index, updates)}
+        onBrandingUpdate={handleBrandingUpdate}
         onEditingChange={setIsTextEditing}
       />
     </motion.div>

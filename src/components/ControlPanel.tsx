@@ -25,11 +25,13 @@ import {
   CircleMinus,
   RectangleVertical
 } from 'lucide-react';
-import { AspectRatio, LayoutType, Branding, SlideData, SignatureSlot } from '../types';
+import { AspectRatio, LayoutType, Branding, SlideData, SignatureSlot, CarouselConfig } from '../types';
 import { cn } from '../lib/utils';
 import { CropModal } from './CropModal';
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ENGINE_PROMPT } from '../constants/prompts';
 
 interface Message {
@@ -38,12 +40,7 @@ interface Message {
 }
 
 interface ControlPanelProps {
-  config: {
-    aspectRatio: AspectRatio;
-    slideCount: number;
-    branding: Branding;
-    slides: SlideData[];
-  };
+  config: CarouselConfig;
   updateConfig: (updates: any) => void;
   generateSlides: () => void;
 
@@ -215,9 +212,12 @@ const sigs = config.branding.signatures;
           const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
-              { role: 'system', content: ENGINE_PROMPT },
-              ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
-              { role: 'user', content: userMessage }
+              { role: 'system' as 'system', content: ENGINE_PROMPT },
+              ...messages.map(m => ({ 
+                role: (m.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user', 
+                content: m.text 
+              })),
+              { role: 'user' as 'user', content: userMessage }
             ]
           });
           
@@ -341,20 +341,30 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
       y: '-50%',
       left: '50%',
       top: '50%',
-      width: isMinimized ? '48px' : '90%',
-      maxWidth: isMinimized ? '48px' : '1000px',
-      height: isMinimized ? '48px' : 'auto',
-      borderRadius: isMinimized ? '16px' : '24px',
+      width: '90%',
+      maxWidth: '1000px',
+      height: 'auto',
+      borderRadius: '24px',
     },
     unpinned: {
       x: 0,
       y: 0,
       left: '40px',
       top: '80px',
-      width: isMinimized ? '48px' : '320px',
-      maxWidth: isMinimized ? '48px' : '320px',
-      height: isMinimized ? '48px' : 'auto',
-      borderRadius: isMinimized ? '16px' : '24px',
+      width: '320px',
+      maxWidth: '320px',
+      height: 'auto',
+      borderRadius: '24px',
+    },
+    minimized: {
+      x: 0,
+      y: 0,
+      left: '40px',
+      top: '80px',
+      width: '48px',
+      maxWidth: '48px',
+      height: '48px',
+      borderRadius: '16px',
     }
   };
 
@@ -389,13 +399,18 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
   });
 };
 
+  const formatMarkdown = (text: string) => {
+    // Garante que tabelas tenham uma linha em branco antes para o parser reconhecer
+    return text.replace(/([^\n])\n\|/g, '$1\n\n|');
+  };
+
   return (
     <motion.div
-      drag={!isPinned}
+      drag={!isPinned && !isMinimized}
       dragMomentum={false}
       dragTransition={{ power: 0 }}
       initial={false}
-      animate={isPinned ? "pinned" : "unpinned"}
+      animate={isMinimized ? "minimized" : (isPinned ? "pinned" : "unpinned")}
       variants={panelVariants}
       transition={{ type: 'spring', damping: 30, stiffness: 250 }}
       className="fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden"
@@ -472,25 +487,34 @@ onClick={() => onResetConfig?.()}
           <div className="p-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
             {activeTab === 'ideia' && (
               <div className="flex flex-col h-[50vh]">
-                <div className="flex-grow overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar">
+                <div className="flex-grow overflow-y-auto space-y-2 mb-4 pr-2 custom-scrollbar">
                   {messages.map((m, i) => (
                     <div key={i} className={cn(
-                      "max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed",
-                      m.role === 'user' 
-                        ? "bg-indigo-600 text-white ml-auto rounded-tr-none" 
-                        : "bg-gray-100 text-gray-800 mr-auto rounded-tl-none"
+                      "flex w-full group",
+                      m.role === 'user' ? "justify-end" : "justify-start"
                     )}>
-                      <div className="whitespace-pre-wrap break-words">
-  {linkify(m.text)}
-  {i === 0 && m.role === 'model' && isTypingIntro && (
-    <span className="inline-block w-[6px] ml-1 animate-pulse">|</span>
-  )}
-</div>
+                      <div className={cn(
+                        "max-w-[85%] w-fit p-3 rounded-2xl text-xs leading-relaxed select-text shadow-sm relative",
+                        m.role === 'user' 
+                          ? "bg-indigo-600 text-white rounded-tr-none" 
+                          : "bg-gray-100 text-gray-800 rounded-tl-none"
+                      )}>
+                        <div className="markdown-body">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {formatMarkdown(m.text)}
+                          </ReactMarkdown>
+                          {i === 0 && m.role === 'model' && isTypingIntro && (
+                            <span className="inline-block w-[6px] ml-1 animate-pulse">|</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                   {isLoading && (
-                    <div className="bg-gray-100 text-gray-500 mr-auto rounded-2xl rounded-tl-none p-3 text-xs animate-pulse">
-                      Pensando...
+                    <div className="flex justify-start w-full">
+                      <div className="bg-gray-100 text-gray-500 rounded-2xl rounded-tl-none p-3 text-xs animate-pulse shadow-sm">
+                        Pensando...
+                      </div>
                     </div>
                   )}
                   <div ref={chatEndRef} />
