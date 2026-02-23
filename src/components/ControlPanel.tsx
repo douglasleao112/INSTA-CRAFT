@@ -987,7 +987,7 @@ Subtítulo do slide 2`}
               </div>
             )}
 
-         {activeTab === 'fotos' && (
+   {activeTab === 'fotos' && (
   <div className="space-y-6">
     {/* Dropzone (sempre visível) */}
     <div 
@@ -1018,66 +1018,65 @@ Subtítulo do slide 2`}
       />
     </div>
 
+    {/* ✅ Bordas (sempre visível) */}
+    <div className="bg-gray-50 p-4 rounded-2xl border border-black/5 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+          Bordas
+        </span>
+        <span className="text-[10px] font-bold text-indigo-600">
+          {config.branding.imageRadius ?? 0}px
+        </span>
+      </div>
+
+      <input
+        type="range"
+        min={0}
+        max={40}
+        value={config.branding.imageRadius ?? 0}
+        onChange={(e) =>
+          handleBrandingChange('imageRadius', parseInt(e.target.value, 10))
+        }
+        className="w-full accent-indigo-600"
+      />
+    </div>
+
     {/* Só aparece quando houver fotos */}
     {uploadedImages.length > 0 && (
-      <div className="space-y-6">
-        {/* Arredondamento (global) */}
-        <div className="bg-gray-50 p-4 rounded-2xl border border-black/5 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-              Bordas
-            </span>
-            <span className="text-[10px] font-bold text-indigo-600">
-              {config.branding.imageRadius ?? 0}px
-            </span>
-          </div>
-
-          <input
-            type="range"
-            min={0}
-            max={40}
-            value={config.branding.imageRadius ?? 0}
-            onChange={(e) =>
-              handleBrandingChange('imageRadius', parseInt(e.target.value, 10))
-            }
-            className="w-full accent-indigo-600"
-          />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            {uploadedImages.length} Fotos Carregadas
+          </span>
+          <button 
+            onClick={() => setUploadedImages([])}
+            className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase"
+          >
+            Limpar
+          </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-              {uploadedImages.length} Fotos Carregadas
-            </span>
-            <button 
-              onClick={() => setUploadedImages([])}
-              className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase"
-            >
-              Limpar
-            </button>
-          </div>
+        <div className="grid grid-cols-4 gap-2">
+          {uploadedImages.slice(0, 8).map((img, i) => (
+            <div key={i} className="group relative aspect-square rounded-lg overflow-hidden border border-black/5 bg-gray-100">
+              <img src={img} className="w-full h-full object-cover" alt="" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUploadedImages(prev => prev.filter((_, index) => index !== i));
+                }}
+                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          ))}
 
-          <div className="grid grid-cols-4 gap-2">
-            {uploadedImages.slice(0, 8).map((img, i) => (
-              <div key={i} className="group relative aspect-square rounded-lg overflow-hidden border border-black/5 bg-gray-100">
-                <img src={img} className="w-full h-full object-cover" alt="" />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setUploadedImages(prev => prev.filter((_, index) => index !== i));
-                  }}
-                  className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-4 h-4 text-white" />
-                </button>
-              </div>
-            ))}
-            {uploadedImages.length > 8 && (
-              <div className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400 border border-black/5">
-                +{uploadedImages.length - 8}
-              </div>
-            )}
-          </div>
+          {uploadedImages.length > 8 && (
+            <div className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400 border border-black/5">
+              +{uploadedImages.length - 8}
+            </div>
+          )}
         </div>
       </div>
     )}
