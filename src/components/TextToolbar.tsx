@@ -22,6 +22,7 @@ interface TextToolbarProps {
 }
 
 export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
+  const [fontSizePx, setFontSizePx] = React.useState(16);
   const [showFormatting, setShowFormatting] = React.useState(false);
   const [showFontFamily, setShowFontFamily] = React.useState(false);
   const [showAlignment, setShowAlignment] = React.useState(false);
@@ -31,6 +32,41 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
   const [showHighlightColor, setShowHighlightColor] = React.useState(false);
   const textColorInputRef = React.useRef<HTMLInputElement>(null);
   const highlightColorInputRef = React.useRef<HTMLInputElement>(null);
+
+
+const getSelectedRange = () => {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed) return null; // nada selecionado
+  return range;
+};
+
+const applyFontSizePx = (px: number) => {
+  const range = getSelectedRange();
+  if (!range) return;
+
+  const span = document.createElement("span");
+  span.style.fontSize = `${px}px`;
+
+  try {
+    // envolve a seleção
+    range.surroundContents(span);
+  } catch {
+    // fallback quando a seleção cruza nós "quebrados"
+    const contents = range.extractContents();
+    span.appendChild(contents);
+    range.insertNode(span);
+  }
+
+  // mantém o cursor/seleção no texto aplicado
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel?.addRange(newRange);
+};
+
 
   const exec = (command: string, value?: string) => {
     // Ensure we have a selection before executing
@@ -119,6 +155,67 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
       </motion.div>
     )}
   </AnimatePresence>
+</div>
+
+{/* Font Size (PX) - Slider */}
+<div className="relative border-r border-black/5">
+<button
+  onClick={() => {
+    setShowFontSize((v) => !v);
+
+    // fecha os outros dropdowns
+    setShowFormatting(false);
+    setShowFontFamily(false);
+    setShowAlignment(false);
+    setShowTransform(false);
+    setShowTextColor(false);
+    setShowHighlightColor(false);
+  }}
+  className={cn(
+    "flex items-center gap-2 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
+    showFontSize && "bg-black/5"
+  )}
+>
+    <Type className="w-4 h-4 text-gray-700" />
+    <span className="text-xs font-extrabold text-gray-700">{fontSizePx}px</span>
+    <ChevronDown
+      className={cn(
+        "w-3 h-3 text-gray-400 transition-transform",
+        showFontSize && "rotate-180"
+      )}
+    />
+  </button>
+
+<AnimatePresence>
+  {showFontSize && (
+    <motion.div
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 5 }}
+      className="absolute top-full left-0 mt-2 w-20 bg-white border border-black/10 shadow-xl rounded-xl overflow-hidden z-50"
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      <div className="max-h-64 overflow-y-auto custom-scrollbar py-1">
+        {Array.from({ length: ((50 - 4) / 2) + 1 }, (_, i) => 4 + i * 2).map((size) => (
+          <button
+            key={size}
+            onClick={() => {
+              setFontSizePx(size);
+              applyFontSizePx(size);
+              setShowFontSize(false);
+            }}
+            className={cn(
+              "w-full py-2 text-xs font-semibold text-gray-700 text-center hover:bg-black/5 transition-colors",
+              fontSizePx === size && "bg-indigo-50 text-indigo-700"
+            )}
+          >
+            {size}
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
 </div>
 
         {/* Formatting Group - Dropdown */}

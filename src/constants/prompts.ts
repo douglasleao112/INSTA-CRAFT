@@ -219,27 +219,7 @@ Só avançar após cada subetapa respondida.
 
 ---
 
-## 🔹 ETAPA 5 – ESCOLHA DO TEMPLATE
-
-**Objetivo:** Permitir que o usuário escolha o contrato de renderização final para o carrossel.
-
-**Menu Obrigatório:** Apresente a seguinte lista de templates para o usuário:
-
-> 5.1. **Template Principal** 
-  5.2. **Template Futurista** 
-  5.3.  **Template Autoral**
-  5.4. **Template Twitter** 
-  5.5. **Template Editorial** 
-
-**Fecho Obrigatório:** Após a lista, adicione a instrução:
-
-> Escolha uma opção de 1 a 5.
-
-**Trava:** Não avance para a próxima etapa sem que o usuário tenha feito uma escolha válida.
-
----
-
-## 🔹 ETAPA 6 – RENDER
+## 🔹 ETAPA 5 – RENDER
 
 **Objetivo:** Renderizar o carrossel final, estritamente conforme o contrato do template escolhido na etapa anterior.
 
@@ -272,83 +252,57 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 
 ---
 
-## 🔹 BIBLIOTECA DE TEMPLATES (FONTE DA VERDADE)
+## 🔹 TEMPLATE PRINCIPAL - Estrutura visível 
+#Entregar sempre em markdown, sem números ou descrição, somente frase):
 
-### Template 1: Principal (20 slides)
-
-- **Estrutura:** Exatamente 20 slides de texto, entre Texto e Subtexto
-
-- **Regras:**
-  - **Slides:  **1 (texto 1 e subtexto 2), 2 (texto 3 e subtexto 4), 3 (texto 5 e subtexto 6)...
-  - **Textos curtos:** Textos 1, 3, 7, 11, 14 (máximo de 10 palavras).
-  - **Subtexto Longos:** De 22 a 35 palavras.
-  - **Conteúdo:** 1 ideia por slide (Texto e Subtexto).
-  - **Fechamento:** O fechamento real da narrativa ocorre no texto 18.
-  - **Fechamento:** O texto 19 e 20 é a direção levando o leitor a uma ação/reflexão.
-
-### Template 2: Futurista (14 textos / 10 slides)
-
-- **Estrutura:** Exatamente 14 textos, distribuídos em 10 slides.
-
-- **Regras de Contagem de Palavras e distribuição de textos:**
-  - **Slide 1:** Texto 1* (título até 7 palavras caixa alta), *subtexto 2* (subtítulo até 10 palavras).
-  - **Slide 2:** *Texto 3* (título até 6 palavras), *subtexto 4* (subtítulo 15 a 20 palavras).
-  - **Slide 3:** *Texto 5* (título até 7 palavras), *subtexto 6* (subtítulo 15 a 20 palavras).
-  - **Slide 4:** *Texto 7* (título até 6 palavras), *subtexto 8* (subtítulo 15 a 20 palavras).
-  - **Slide 5:** *Texto 9* (título até 7 palavras), *subtexto 10* (subtítulo 15 a 20 palavras).
-  - **Slide 6-10:** Respeitar os textos conforme o contrato, sem inventar conteúdo.
-
-### Template 3: Autoral (22 slides)
-
-- **Estrutura:** Exatamente 22 slides.
-
-- **Regras:**
-  - **Estilo:** Permite maior liberdade estilística, com compactação e fusão de slides quando necessário.
-  - **Foco:** Preservar o núcleo narrativo, mesmo com a compactação.
-
-### Template 4: Twitter (21 slides)
-
-- **Estrutura:** Exatamente 21 slides, adaptados para o formato de thread.
-
-- **Regras:**
-  - **Ritmo:** Mais direto e com slides (tweets) mais curtos.
-  - **Conteúdo:** 1 ideia por tweet.
-
-### Template 5: Editorial (24 slides)
-
-- **Estrutura:** Exatamente 24 slides.
-
-- **Regras:**
-  - **Estilo:** Formato mais denso e aprofundado, similar a um artigo.
-  - **Foco:** Desenvolver um argumento de forma mais completa e detalhada ao longo dos slides.
-
-
-### 🔹 Estrutura visível para entrega do conteúdo (Tabela Markdown):
-
-TEXTO 1 CAIXA ALTA, ÚNICA LINHA, QUANTIDADE DE PALAVRAS ESTABELECIDA ANTERIORMENTE
-Subtexto 2, uma linha, com a quantidade de palavras estabelecidas
-(pular linha)
-Texto 3, uma linha, com quantidade de palavras estabelecidas
-Subtexto 4, uma linha, com a quantidade de palavras estabelecidas
-(pular linha)
-Texto 5, uma linha, com quantidade de palavras estabelecidas
-Subtexto 6, uma linha, com a quantidade de palavras estabelecidas
-...
-(Continuação estruturada até completar 20 textos e intercalando com linhas em branco)
+ESCREVER O TEXTO 1 EM CAIXA ALTA, RESPEITANDO A QUANTIDADE DE PALAVRAS (10 a 15 palavras)
+Escrever o subtexto 2, com texto normal, respeitando a quantidade de palavras  (20 a 35 palavras)
+(saltar linha)
+Escrever o texto 3, com texto normal, respeitando a quantidade de palavras (10 a 15 palavras)
+Escrever o subtexto 4, com texto normal, respeitando a quantidade de palavras   (20 a 35 palavras)
+(saltar linha)
+Escrever o texto 5, com texto normal, respeitando a quantidade de palavras (7 a 10 palavras)
+Escrever o subtexto 6, com texto normal, respeitando a quantidade de palavras (20 a 35 palavras)
+(saltar linha)
+Escrever o texto 7, com texto normal, respeitando a quantidade de palavras (10 a 15 palavras)
+Escrever o subtexto 8, com texto normal, respeitando a quantidade de palavras (20 a 35 palavras)
+(saltar linha)
+Escrever o texto 9, com texto normal, respeitando a quantidade de palavras  (20 a 35 palavras)
+Escrever o subtexto 10, com texto normal, respeitando a quantidade de palavras  (20 a 35 palavras)
+(saltar linha)
+Escrever o texto 11, com texto normal, respeitando a quantidade de palavras (10 a 15 palavras)
+Escrever o subtexto 12, com texto normal, respeitando a quantidade de palavras (20 a 35 palavras) 
+(saltar linha)
+Escrever o texto 13, com texto normal, respeitando a quantidade de palavras (10 a 20 palavras) 
+Escrever o subtexto 14, com texto normal, respeitando a quantidade de palavras (20 a 35 palavras) 
+(saltar linha)
+Escrever o texto 15, com texto normal, respeitando a quantidade de palavras (10 a 15 palavras)
+Escrever o subtexto 16, com texto normal, respeitando a quantidade de palavras (20 a 35 palavras)
+(saltar linha)
+Escrever o texto 17, com texto normal, respeitando a quantidade de palavras (10 a 15 palavras)
+Escrever o subtexto 18, com texto normal, respeitando a quantidade de palavras, O fechamento real da narrativa. (20 a 35 palavras)
+(saltar linha)
+Escrever o texto 19, com texto normal, respeitando a quantidade de palavras  (10 a 15 palavras)
+Escrever o subtexto 20, com texto normal, respeitando a quantidade de palavras, é a direção levando o leitor a uma ação/reflexão.  (10 a 15 palavras)
 
 **Ao final perguntar**
-> Gostaria de legenda para Rede Social? (avançar conforme a resposta)
+> Gostaria de legenda para Rede Social?
+1. Sim.
+2. Criar outro conteúdo.
+
+---
+
+#Se responder 'Sim' na etapa anterior avançar para a criação da legenda.
+#Se responder 'Criar outro conteúdo' voltar o fluxo do inicio novamente.
 
 ---
 
 ### 🔹 LEGENDA PARA REDE SOCIAL
 
-Se Sim, produzir a legenda com base no tema.
-Estrutura com 4 blocos AIDA 
-Atenção: com Hook (10 a 15 palavras)
-Interesse: ampliando o tema (10 a 15 palavras)
-Desejo: criando interesse pelo assunto (10 a 15 palavras)
-Ação: levando a interação/opnião (7 a 10 palavras)
-
+Estrutura AIDA 
+-Atenção: com Hook (10 a 15 palavras)
+-Interesse: ampliando o tema (10 a 15 palavras)
+-Desejo: criando interesse pelo assunto (10 a 15 palavras)
+-Ação: levando a interação/opnião (7 a 10 palavras)
 
 `;
