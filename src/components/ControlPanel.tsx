@@ -29,6 +29,7 @@ import { AspectRatio, LayoutType, Branding, SlideData, SignatureSlot } from '../
 import { cn } from '../lib/utils';
 import { CropModal } from './CropModal';
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import { ENGINE_PROMPT } from '../constants/prompts';
 
 interface Message {
@@ -180,25 +181,61 @@ const sigs = config.branding.signatures;
     setIsLoading(true);
 
     try {
-      // Try backend API (OpenAI/GPT) first
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: ENGINE_PROMPT },
-            ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
-            { role: 'user', content: userMessage }
-          ]
-        })
-      });
+      // 1. Try backend API (OpenAI/GPT) first
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: ENGINE_PROMPT },
+              ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
+              { role: 'user', content: userMessage }
+            ]
+          })
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(prev => [...prev, { role: 'model', text: data.text || 'Desculpe, não consegui processar sua solicitação.' }]);
-      } else {
-        // Fallback to Gemini if backend fails or is not configured
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.text) {
+            setMessages(prev => [...prev, { role: 'model', text: data.text }]);
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.log("Backend not available, trying frontend fallback...");
+      }
+
+      // 2. Try Frontend OpenAI if key is available
+      const openAIKey = process.env.OPENAI_API_KEY;
+      if (openAIKey) {
+        try {
+          const openai = new OpenAI({ apiKey: openAIKey, dangerouslyAllowBrowser: true });
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              { role: 'system', content: ENGINE_PROMPT },
+              ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
+              { role: 'user', content: userMessage }
+            ]
+          });
+          
+          const text = completion.choices[0].message.content;
+          if (text) {
+            setMessages(prev => [...prev, { role: 'model', text }]);
+            setIsLoading(false);
+            return;
+          }
+        } catch (openaiError) {
+          console.error("Frontend OpenAI Error:", openaiError);
+        }
+      }
+
+      // 3. Fallback to Gemini (Frontend)
+      const geminiKey = process.env.GEMINI_API_KEY;
+      if (geminiKey) {
+        const ai = new GoogleGenAI({ apiKey: geminiKey });
         const chat = ai.chats.create({
           model: "gemini-3.1-pro-preview",
           config: {
@@ -209,25 +246,12 @@ const sigs = config.branding.signatures;
 
         const result = await chat.sendMessage({ message: userMessage });
         setMessages(prev => [...prev, { role: 'model', text: result.text || 'Desculpe, não consegui processar sua solicitação.' }]);
+      } else {
+        throw new Error("No API keys configured.");
       }
     } catch (error) {
       console.error("Chat error:", error);
-      // Final fallback to Gemini on network error to backend
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const chat = ai.chats.create({
-          model: "gemini-3.1-pro-preview",
-          config: {
-            systemInstruction: ENGINE_PROMPT,
-          },
-          history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
-        });
-
-        const result = await chat.sendMessage({ message: userMessage });
-        setMessages(prev => [...prev, { role: 'model', text: result.text || 'Desculpe, não consegui processar sua solicitação.' }]);
-      } catch (geminiError) {
-        setMessages(prev => [...prev, { role: 'model', text: 'Erro ao conectar com a inteligência artificial. Tente acessar: https://chatgpt.com/g/g-699ba52943f48191bcd840a8dba514bd-insta-craft ' }]);
-      }
+      setMessages(prev => [...prev, { role: 'model', text: 'Erro ao conectar com a inteligência artificial. Tente acessar: https://chatgpt.com/g/g-699ba52943f48191bcd840a8dba514bd-insta-craft ' }]);
     } finally {
       setIsLoading(false);
     }

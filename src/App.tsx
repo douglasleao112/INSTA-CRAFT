@@ -98,6 +98,17 @@ const INITIAL_CONFIG: CarouselConfig = {
         showFrame: false
       },
     },
+    typography: {
+      headlineFontFamily: 'Inter',
+      headlineFontSize: 32,
+      headlineFontWeight: 700,
+      subheadlineFontFamily: 'Inter',
+      subheadlineFontSize: 18,
+      subheadlineFontWeight: 400,
+      signatureFontFamily: 'Inter',
+      signatureFontSize: 14,
+      signatureFontWeight: 600,
+    },
   },
   slides: [],
   isGlobalBranding: true,
