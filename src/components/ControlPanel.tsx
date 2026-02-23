@@ -79,9 +79,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
   // Chat state
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: '🔮 Olá, vamos começar?' }
-  ]);
+const [messages, setMessages] = useState<Message[]>([
+  { role: 'model', text: '' }
+]);
+
+const [isTypingIntro, setIsTypingIntro] = useState(true);
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -94,13 +97,38 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+  const fullText = '🔮 Olá, vamos iniciar a experiência?';
+  let i = 0;
+
+  setIsTypingIntro(true);
+
+  const timer = window.setInterval(() => {
+    i++;
+
+    setMessages(prev => {
+      const next = [...prev];
+      if (!next[0]) return prev;
+      next[0] = { ...next[0], role: 'model', text: fullText.slice(0, i) };
+      return next;
+    });
+
+    if (i >= fullText.length) {
+      window.clearInterval(timer);
+      setIsTypingIntro(false);
+    }
+  }, 25); // velocidade: 25 rápido | 50 mais lento
+
+  return () => window.clearInterval(timer);
+}, []);
+
   // ✅ garante homePosition para não "perder" a assinatura ao reativar
 useEffect(() => {
   
   
   const handleResetConfig = () => {
   // opcional: confirmação
-  const ok = window.confirm("Resetar configurações? Isso vai limpar o localStorage.");
+  const ok = window.confirm("Resetar configurações? Isso vai limpar o histórico.");
   if (!ok) return;
 
   // limpa tudo (se preferir, use removeItem nas chaves específicas)
@@ -198,7 +226,7 @@ const sigs = config.branding.signatures;
         const result = await chat.sendMessage({ message: userMessage });
         setMessages(prev => [...prev, { role: 'model', text: result.text || 'Desculpe, não consegui processar sua solicitação.' }]);
       } catch (geminiError) {
-        setMessages(prev => [...prev, { role: 'model', text: 'Erro ao conectar com a inteligência artificial. Tente novamente.' }]);
+        setMessages(prev => [...prev, { role: 'model', text: 'Erro ao conectar com a inteligência artificial. Tente acessar: https://chatgpt.com/g/g-699ba52943f48191bcd840a8dba514bd-insta-craft ' }]);
       }
     } finally {
       setIsLoading(false);
@@ -306,6 +334,37 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
     }
   };
 
+
+  const linkify = (text: string) => {
+  const urlRegex = /(\bhttps?:\/\/[^\s]+|\bwww\.[^\s]+)/gi;
+
+  return text.split(urlRegex).map((part, idx) => {
+    if (!part) return null;
+
+    const isUrl = urlRegex.test(part);
+    urlRegex.lastIndex = 0;
+
+    if (!isUrl) {
+      return <React.Fragment key={idx}>{part}</React.Fragment>;
+    }
+
+    const href = part.startsWith("http") ? part : `https://${part}`;
+
+    return (
+      <a
+        key={idx}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline text-indigo-600 break-words"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {part}
+      </a>
+    );
+  });
+};
+
   return (
     <motion.div
       drag={!isPinned}
@@ -397,7 +456,12 @@ onClick={() => onResetConfig?.()}
                         ? "bg-indigo-600 text-white ml-auto rounded-tr-none" 
                         : "bg-gray-100 text-gray-800 mr-auto rounded-tl-none"
                     )}>
-                      <div className="whitespace-pre-wrap">{m.text}</div>
+                      <div className="whitespace-pre-wrap break-words">
+  {linkify(m.text)}
+  {i === 0 && m.role === 'model' && isTypingIntro && (
+    <span className="inline-block w-[6px] ml-1 animate-pulse">|</span>
+  )}
+</div>
                     </div>
                   ))}
                   {isLoading && (
