@@ -331,30 +331,34 @@ const cancelBrandingEdit = () => {
     borderRadius: `${imgRadius}px`,
   };
 
-  const toggleBackgroundColor = (e: React.MouseEvent) => {
-    // Só troca se não for layout full-bg (onde a imagem cobre tudo)
-    // e se não estiver editando texto
-    if (isFullBg || activeElement !== null) return;
-    
-    // Se o clique veio de uma imagem, texto ou botão, não trocamos o fundo
-    const target = e.target as HTMLElement;
-    if (
-      target.closest('img') || 
-      target.closest('h2') || 
-      target.closest('p') || 
-      target.closest('button')
-    ) {
-      return;
-    }
-    
-    const currentBg = data.backgroundColor || branding.backgroundColor;
-    const nextBg = currentBg === branding.backgroundColor 
-      ? branding.alternativeBackgroundColor 
+const toggleBackgroundColor = (e: React.MouseEvent) => {
+  if (isFullBg || activeElement !== null) return;
+
+  const target = e.target as HTMLElement;
+
+  // NÃO troca fundo se clicou em cima de área de imagem, textos, botões, ou qualquer coisa marcada como "image click"
+  if (
+    target.closest('[data-imageclick="true"]') ||
+    target.closest('[data-imageframe="true"]') || // extra segurança, vc já usa
+    target.closest('img') ||
+    target.closest('h2') ||
+    target.closest('p') ||
+    target.closest('button') ||
+    target.closest('input') ||
+    target.closest('textarea')
+  ) {
+    return;
+  }
+
+  const currentBg = data.backgroundColor || branding.backgroundColor;
+  const nextBg =
+    currentBg === branding.backgroundColor
+      ? branding.alternativeBackgroundColor
       : branding.backgroundColor;
-    
-    setActivePresetIndex(null);
-    onUpdate?.({ backgroundColor: nextBg });
-  };
+
+  setActivePresetIndex(null);
+  onUpdate?.({ backgroundColor: nextBg });
+};
 
   const renderLayout = () => {
     const headlineColor = effectiveIsDark ? '#FFFFFF' : branding.primaryColor;
@@ -468,14 +472,16 @@ const cancelBrandingEdit = () => {
       
 case 'full-bg':
   return (
-    <div
-      className="relative w-full h-full overflow-hidden cursor-pointer"
-      onClick={(e) => {
-        e.stopPropagation();
-        pickSlideImage();
-      }}
-      title="Clique para trocar a imagem"
-    >
+<div
+  className="relative w-full h-full overflow-hidden cursor-pointer"
+  data-imageclick="true"
+  onDoubleClick={(e) => {
+    e.stopPropagation();
+    pickSlideImage();
+  }}
+  onClick={(e) => e.stopPropagation()} // evita o “piscar” por clique simples
+  title="Duplo clique para trocar a imagem"
+>
       {/* Imagem (se existir) */}
       {data.image ? (
         <motion.img
@@ -501,7 +507,7 @@ case 'full-bg':
       {/* Overlay do hover (tela toda) */}
       <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center z-10">
         <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-          Trocar foto
+          Duplo clique para trocar
         </span>
       </div>
 
@@ -543,11 +549,12 @@ case 'text-top-img-bottom':
 >
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={(e) => {
-      e.stopPropagation();
-      pickSlideImage();
-    }}
-    title="Clique para trocar a imagem"
+onDoubleClick={(e) => {
+  e.stopPropagation();
+  pickSlideImage();
+}}
+      onClick={(e) => e.stopPropagation()} // evita clique simples cair no toggle do fundo
+  title="Duplo clique para trocar"
   >
     {data.image ? (
      <img
@@ -565,7 +572,7 @@ case 'text-top-img-bottom':
 
     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center" style={imgWrapStyle}>
       <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-        Trocar foto
+        Duplo clique para trocar
       </span>
     </div>
   </div>
@@ -591,11 +598,12 @@ case 'text-top-img-bottom':
     >
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={(e) => {
-      e.stopPropagation();
-      pickSlideImage();
-    }}
-    title="Clique para trocar a imagem"
+onDoubleClick={(e) => {
+  e.stopPropagation();
+  pickSlideImage();
+}}
+      onClick={(e) => e.stopPropagation()} // evita clique simples cair no toggle do fundo
+  title="Duplo clique para trocar a imagem"
   >
     {data.image ? (
     <img
@@ -613,7 +621,7 @@ case 'text-top-img-bottom':
 
     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center" style={imgWrapStyle}>
       <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-        Trocar foto
+        Duplo clique para trocar
       </span>
     </div>
   </div>
@@ -646,11 +654,12 @@ case 'text-top-img-bottom':
 >
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={(e) => {
-      e.stopPropagation();
-      pickSlideImage();
-    }}
-    title="Clique para trocar a imagem"
+onDoubleClick={(e) => {
+  e.stopPropagation();
+  pickSlideImage();
+}}
+     onClick={(e) => e.stopPropagation()} // evita clique simples cair no toggle do fundo
+  title="Duplo clique para trocar a imagem"
   >
     {data.image ? (
 <img
@@ -669,7 +678,7 @@ case 'text-top-img-bottom':
     {/* overlay opcional */}
     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center" style={imgWrapStyle}>
       <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-        Trocar foto
+        Duplo clique para trocar
       </span>
     </div>
   </div>
@@ -699,11 +708,12 @@ case 'headline-img-subheadline':
 >
   <div
     className="relative w-full h-full cursor-pointer"
-    onClick={(e) => {
-      e.stopPropagation();
-      pickSlideImage();
-    }}
-    title="Clique para trocar a imagem"
+onDoubleClick={(e) => {
+  e.stopPropagation();
+  pickSlideImage();
+}}
+    onClick={(e) => e.stopPropagation()} // evita clique simples cair no toggle do fundo
+  title="Duplo clique para trocar a imagem"
   >
     {data.image ? (
    <img
@@ -721,7 +731,7 @@ case 'headline-img-subheadline':
 
     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center" style={imgWrapStyle}>
       <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-        Trocar foto
+        Duplo clique para trocar
       </span>
     </div>
   </div>
