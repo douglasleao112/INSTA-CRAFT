@@ -347,7 +347,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#F8F9FA] workspace-grid relative overflow-hidden font-sans">
+    <div className="h-screen w-full bg-[#F8F9FA] workspace-grid relative overflow-hidden font-sans">
       <AnimatePresence>
         {isTextEditing && (
           <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100]">
@@ -444,9 +444,9 @@ export default function App() {
 />
 
       {/* Main Workspace Area */}
-     <main
+<main
   ref={workspaceRef as any}
-  className="pt-32 pb-32 min-h-screen overflow-hidden select-none cursor-crosshair active:cursor-grabbing"
+  className="pt-32 pb-32 h-screen overflow-hidden select-none cursor-crosshair active:cursor-grabbing"
   onWheel={handleWheel}
   onPointerDown={(e) => {
   if (isTextEditing) return;
