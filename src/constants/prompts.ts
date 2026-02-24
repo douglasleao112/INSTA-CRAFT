@@ -256,7 +256,7 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 ESCREVER O TEXTO 1 EM CAIXA ALTA, COM 10 A 15 PALAVRAS.
 Escrever o subtexto 2 em Sentence case, com 20 a 35 palavras.
 (saltar linha)
-ESCREVER O TEXTO 3 EM CAIXA ALTA, COM 10 A 15 PALAVRAS.
+Escrever o Texto 2 em Sentence case, com 10 a 15 palavras.
 Escrever o subtexto 4 em Sentence case, com 20 a 35 palavras.
 (saltar linha)
 Escrever o Texto 5 em Sentence case, com 7 a 10 palavras.
@@ -298,10 +298,10 @@ Ao final perguntar:
 
 Formato AIDA:
 
-- Atenção: 10 a 15 palavras  
-- Interesse: 10 a 15 palavras  
-- Desejo: 10 a 15 palavras  
-- Ação: 7 a 10 palavras
+- Trecho com intuito de gerar Atenção com 10 a 15 palavras  
+- Etapa para gerar Interesse com 10 a 15 palavras  
+- Etapa para gerar Desejo com 10 a 15 palavras  
+- Ação para levar a interagir, paragrafo com 7 a 10 palavras
 
 #Entregar somente o texto para usar na rede social.
 # Sem explicações e tópicos, salte uma linha entre cada bloco.
