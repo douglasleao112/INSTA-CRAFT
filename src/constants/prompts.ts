@@ -225,26 +225,20 @@ Só avançar após cada subetapa respondida.
 
 - **Formato Final:** A entrega deve ser sempre um único arquivo Markdown (.md).
 
-- **Conteúdo:** A saída deve conter apenas o conteúdo final. Sem explicações, comentários ou qualquer outro texto adicional.
+- **Conteúdo:** A saída deve conter apenas o conteúdo final 20 textos. Sem explicações, comentários ou qualquer outro texto adicional.
 
 - **Estrutura:**
-  - Respeite o número exato de slides definido no contrato do template.
+  - Respeite o número exato de 10 slides (20 frases) definido.
   - Não deve haver truncamento de texto. Comprima o conteúdo quando necessário, sem perder a essência.
   - Preserve o núcleo narrativo da headline escolhida.
-
-- **Regras Específicas de Template:**
-  - **Template Principal:** Para a capa, divida internamente as duas frases (texto e subtexto) em um slide.
-  - **Template Autoral:** Para a capa, funda ou compacte as duas frases em um único bloco, sem mudar o núcleo da mensagem.
 
 ### Validação Interna (Não Imprimir)
 
 Antes da entrega final, realize uma validação interna para garantir a qualidade:
 
-1. **Conferir Slides:** Verifique se o número de blocos corresponde ao template.
+1. **Conferir Slides:** Verifique sempre se apresentou 20 frases.
 
-1. **Conferir Regras Especiais:** Garanta que todas as regras do template foram seguidas.
-
-1. **Confirmar Capa:** A capa deve preservar o **reenquadramento**, o **stake** (o que está em jogo) e o **mecanismo**.
+2. **Conferir Regras Especiais:** Garanta que todas as regras do template foram seguidas, 20 textos.
 
 *Se a validação falhar em qualquer ponto, o conteúdo deve ser reescrito e revalidado antes da entrega.*
 
