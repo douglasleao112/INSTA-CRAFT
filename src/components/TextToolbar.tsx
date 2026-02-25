@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Type,
   Plus,
-  CaseSensitive
+  CaseSensitive,
+  ArrowUpDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -21,12 +22,31 @@ interface TextToolbarProps {
   className?: string;
 }
 
+const LineHeightIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="12" y1="3" x2="12" y2="21" />
+    <polyline points="8 7 12 3 16 7" />
+    <polyline points="8 17 12 21 16 17" />
+  </svg>
+);
+
 export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
   const [fontSizePx, setFontSizePx] = React.useState(16);
+  const [lineHeight, setLineHeight] = React.useState(1.2);
   const [showFormatting, setShowFormatting] = React.useState(false);
   const [showFontFamily, setShowFontFamily] = React.useState(false);
   const [showAlignment, setShowAlignment] = React.useState(false);
   const [showFontSize, setShowFontSize] = React.useState(false);
+  const [showLineHeight, setShowLineHeight] = React.useState(false);
   const [showTransform, setShowTransform] = React.useState(false);
   const [showTextColor, setShowTextColor] = React.useState(false);
   const [showHighlightColor, setShowHighlightColor] = React.useState(false);
@@ -60,6 +80,29 @@ const applyFontSizePx = (px: number) => {
   }
 
   // mantém o cursor/seleção no texto aplicado
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel?.addRange(newRange);
+};
+
+const applyLineHeight = (value: number) => {
+  const range = getSelectedRange();
+  if (!range) return;
+
+  const span = document.createElement("span");
+  span.style.lineHeight = `${value}`;
+  span.style.display = "inline-block";
+
+  try {
+    range.surroundContents(span);
+  } catch {
+    const contents = range.extractContents();
+    span.appendChild(contents);
+    range.insertNode(span);
+  }
+
   const sel = window.getSelection();
   sel?.removeAllRanges();
   const newRange = document.createRange();
@@ -116,7 +159,16 @@ const applyFontSizePx = (px: number) => {
 {/* Font Selection */}
 <div className="relative border-r border-black/5">
   <button
-    onClick={() => setShowFontFamily(!showFontFamily)}
+    onClick={() => {
+      setShowFontFamily(!showFontFamily);
+      setShowFormatting(false);
+      setShowAlignment(false);
+      setShowFontSize(false);
+      setShowLineHeight(false);
+      setShowTransform(false);
+      setShowTextColor(false);
+      setShowHighlightColor(false);
+    }}
     className={cn(
       "flex items-center gap-2 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
       showFontFamily && "bg-black/5"
@@ -143,9 +195,14 @@ const applyFontSizePx = (px: number) => {
           <button
             key={font}
             onClick={() => {
-              exec('fontName', font);
-              setShowFontFamily(false);
-            }}
+  exec('fontName', font);
+
+  // força espaçamento padrão
+  setLineHeight(1);
+  applyLineHeight(1);
+
+  setShowFontFamily(false);
+}}
             className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-black/5 transition-colors"
             style={{ fontFamily: font }}
           >
@@ -167,6 +224,7 @@ const applyFontSizePx = (px: number) => {
     setShowFormatting(false);
     setShowFontFamily(false);
     setShowAlignment(false);
+    setShowLineHeight(false);
     setShowTransform(false);
     setShowTextColor(false);
     setShowHighlightColor(false);
@@ -221,7 +279,16 @@ const applyFontSizePx = (px: number) => {
         {/* Formatting Group - Dropdown */}
       <div className="relative ">
         <button 
-          onClick={() => setShowFormatting(!showFormatting)}
+          onClick={() => {
+            setShowFormatting(!showFormatting);
+            setShowFontFamily(false);
+            setShowAlignment(false);
+            setShowFontSize(false);
+            setShowLineHeight(false);
+            setShowTransform(false);
+            setShowTextColor(false);
+            setShowHighlightColor(false);
+          }}
           className={cn(
             "flex items-center gap-1 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
             showFormatting && "bg-black/5"
@@ -250,7 +317,16 @@ const applyFontSizePx = (px: number) => {
       {/* Text Transformation Group - Dropdown */}
       <div className="relative">
         <button 
-          onClick={() => setShowTransform(!showTransform)}
+          onClick={() => {
+            setShowTransform(!showTransform);
+            setShowFormatting(false);
+            setShowFontFamily(false);
+            setShowAlignment(false);
+            setShowFontSize(false);
+            setShowLineHeight(false);
+            setShowTextColor(false);
+            setShowHighlightColor(false);
+          }}
           className={cn(
             "flex items-center gap-1 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
             showTransform && "bg-black/5"
@@ -293,10 +369,73 @@ const applyFontSizePx = (px: number) => {
         </AnimatePresence>
       </div>
 
+      {/* Line Height Group - Dropdown */}
+      <div className="relative border-l border-black/5">
+        <button 
+          onClick={() => {
+            setShowLineHeight(!showLineHeight);
+            setShowFormatting(false);
+            setShowFontFamily(false);
+            setShowAlignment(false);
+            setShowFontSize(false);
+            setShowTransform(false);
+            setShowTextColor(false);
+            setShowHighlightColor(false);
+          }}
+          className={cn(
+            "flex items-center gap-1 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
+            showLineHeight && "bg-black/5"
+          )}
+        >
+          <LineHeightIcon className="w-4 h-4 text-gray-700" />
+          <span className="text-xs font-extrabold text-gray-700">{lineHeight}</span>
+          <ChevronDown className={cn("w-3 h-3 text-gray-400 transition-transform", showLineHeight && "rotate-180")} />
+        </button>
+        <AnimatePresence>
+          {showLineHeight && (
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute top-full left-0 mt-2 w-20 bg-white border border-black/10 shadow-xl rounded-xl overflow-hidden z-50"
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <div className="py-1">
+                {[0.8, 1, 1.15, 1.25, 1.5].map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setLineHeight(value);
+                      applyLineHeight(value);
+                      setShowLineHeight(false);
+                    }}
+                    className={cn(
+                      "w-full py-2 text-xs font-semibold text-gray-700 text-center hover:bg-black/5 transition-colors",
+                      lineHeight === value && "bg-indigo-50 text-indigo-700"
+                    )}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Alignment Group - Dropdown */}
       <div className="relative border-r border-black/5">
         <button 
-          onClick={() => setShowAlignment(!showAlignment)}
+          onClick={() => {
+            setShowAlignment(!showAlignment);
+            setShowFormatting(false);
+            setShowFontFamily(false);
+            setShowFontSize(false);
+            setShowLineHeight(false);
+            setShowTransform(false);
+            setShowTextColor(false);
+            setShowHighlightColor(false);
+          }}
           className={cn(
             "flex items-center gap-1 px-3 py-1.5 hover:bg-black/5 rounded-xl transition-colors",
             showAlignment && "bg-black/5"
