@@ -636,19 +636,19 @@ onClick={() => onResetConfig?.()}
                 type="color"
                 value={(config.branding as any)[item.key]}
                 onChange={(e) => handleBrandingChange(item.key as any, e.target.value)}
-                className="w-6 h-6 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                className="w-6 h-7 rounded cursor-pointer border-none p-0 overflow-hidden"
               />
             ) : (
               <button
                 onClick={() => handleBrandingChange(item.key as any, !(config.branding as any)[item.key])}
                 className={cn(
-                  "w-6 h-6 rounded-lg flex items-center justify-center transition-all border",
+                  "w-5 h-5 rounded flex items-center justify-center transition-all border",
                   (config.branding as any)[item.key]
                     ? "bg-indigo-600 border-indigo-600 text-white"
                     : "bg-white border-black/5 text-gray-300"
                 )}
               >
-                <Check className={cn("w-4 h-4 transition-transform", (config.branding as any)[item.key] ? "scale-100" : "scale-0")} />
+                <Check className={cn("w-3 h-3 transition-transform", (config.branding as any)[item.key] ? "scale-100" : "scale-0")} />
               </button>
             )}
             <span className="text-[9px] font-bold text-gray-500 uppercase text-center leading-tight">{item.label}</span>

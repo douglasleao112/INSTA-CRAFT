@@ -245,7 +245,7 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 ---
 
 ## 🟪 TEMPLATE PRINCIPAL - Estrutura visível 
-#Entregar sempre em markdown, sem números, sem linha divisória, sem descrição, somente a frase:
+#Entregar sempre em markdown, sem números, sem linha divisória, sem descrição, somente a frase, sempre saltando linha entre uma frase e outra:
 
 ESCREVER O TEXTO 1 SLIDE 1 EM CAIXA ALTA, COM 15 A 20 PALAVRAS.(saltar linha)
 Escrever o subtexto 2 Slide 1 em Sentence case, com 15 a 20 palavras.(saltar linha)
