@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import { 
   Settings2, 
   Layout, 
@@ -88,6 +88,7 @@ const [isTypingIntro, setIsTypingIntro] = useState(true);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -426,6 +427,8 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
   return (
     <motion.div
       drag={!isPinned && !isMinimized && !tempImage}
+      dragControls={dragControls}
+      dragListener={false}
       dragMomentum={false}
       dragTransition={{ power: 0 }}
       initial={false}
@@ -435,7 +438,9 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
       className="fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden"
     >
       {/* Header */}
-      <div className={cn(
+      <div 
+        onPointerDown={(e) => !isPinned && !isMinimized && !tempImage && dragControls.start(e)}
+        className={cn(
         "flex items-center justify-between p-4 border-b border-black/5 bg-white/50",
         !isPinned ? "cursor-grab active:cursor-grabbing" : "cursor-default",
         isMinimized && "border-none p-0 flex items-center justify-center h-full w-full"

@@ -157,7 +157,7 @@ const cancelBrandingEdit = () => {
           slot.showFrame ? "p-2.5 border" : "p-0"
         )}
         style={{
-          userSelect: editingBrandingField ? 'text' : 'none',
+          userSelect: 'text',
           backgroundColor: slot.showFrame 
             ? `${branding.container.backgroundColor}${Math.round((branding.container.opacity / 100) * 255).toString(16).padStart(2, '0')}` 
             : 'transparent',
@@ -215,7 +215,7 @@ const cancelBrandingEdit = () => {
                       if (e.key === 'Escape') cancelBrandingEdit();
                     }}
                     className={cn(
-                      "text-[10px] font-bold leading-tight rounded px-1 -mx-1 outline-none transition-all",
+                      "text-[10px] font-bold leading-tight rounded px-1 -mx-1 outline-none transition-all cursor-text",
                       isEditingThisSlot && editingBrandingField === 'name' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
                     )}
                     style={{ color: effectiveIsDark ? '#FFFFFF' : '#000000' }}
@@ -258,7 +258,7 @@ const cancelBrandingEdit = () => {
                     if (e.key === 'Escape') cancelBrandingEdit();
                   }}
                   className={cn(
-                    "text-[8px] font-medium opacity-60 leading-tight rounded px-1 -mx-1 outline-none transition-all",
+                    "text-[8px] font-medium opacity-60 leading-tight rounded px-1 -mx-1 outline-none transition-all cursor-text",
                     isEditingThisSlot && editingBrandingField === 'handle' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
                   )}
                   style={{ color: effectiveIsDark ? 'rgba(255, 255, 255, 0.8)' : '#4A4A4A' }}
