@@ -51,6 +51,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         avatarBorderColor: '#ffffff',
         avatarBorderWidth: 1,
         avatarBorderRadius: 50,
+        avatarSize: 40,
         showFrame: false
       },
       topRight: { 
@@ -64,6 +65,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         avatarBorderColor: '#ffffff',
         avatarBorderWidth: 1,
         avatarBorderRadius: 50,
+        avatarSize: 40,
         showFrame: false
       },
       centerLow: { 
@@ -77,6 +79,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         avatarBorderColor: '#ffffff',
         avatarBorderWidth: 1,
         avatarBorderRadius: 50,
+        avatarSize: 40,
         showFrame: false
       },
       bottomLeft: { 
@@ -90,6 +93,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         avatarBorderColor: '#ffffff',
         avatarBorderWidth: 1,
         avatarBorderRadius: 50,
+        avatarSize: 40,
         showFrame: false
       },
       bottomRight: { 
@@ -103,6 +107,7 @@ const INITIAL_CONFIG: CarouselConfig = {
         avatarBorderColor: '#ffffff',
         avatarBorderWidth: 1,
         avatarBorderRadius: 50,
+        avatarSize: 40,
         showFrame: false
       },
     },

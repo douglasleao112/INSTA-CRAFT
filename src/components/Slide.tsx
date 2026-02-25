@@ -123,6 +123,12 @@ const cancelBrandingEdit = () => {
     return data.signaturePositions?.[slotKey] || branding.signatures[slotKey].position;
   };
 
+  const isEffectivelyEmpty = (html: string) => {
+    if (!html) return true;
+    const stripped = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    return stripped === '';
+  };
+
   const renderSignature = (slotKey: keyof Branding['signatures'], slot: SignatureSlot) => {
     if (!slot.enabled) return null;
     const currentPos = getSlotPosition(slotKey);
@@ -147,7 +153,7 @@ const cancelBrandingEdit = () => {
         onClick={(e) => e.stopPropagation()}
         data-imageframe="true"
         className={cn(
-          "absolute top-5 left-7 z-20 flex items-center gap-3 cursor-grab active:cursor-grabbing",
+          "absolute top-5 left-7 z-20 flex items-center gap-1.5 cursor-grab active:cursor-grabbing",
           slot.showFrame ? "p-2.5 border" : "p-0"
         )}
         style={{
@@ -161,8 +167,10 @@ const cancelBrandingEdit = () => {
       >
         {slot.showAvatar && slot.type === 'text' && (
           <div 
-            className="w-10 h-10 overflow-hidden flex-shrink-0 border" 
+            className="overflow-hidden flex-shrink-0 border" 
             style={{ 
+              width: `${slot.avatarSize}px`,
+              height: `${slot.avatarSize}px`,
               backgroundColor: branding.highlightColor,
               borderColor: slot.avatarBorderColor,
               borderWidth: `${slot.avatarBorderWidth}px`,
@@ -178,22 +186,66 @@ const cancelBrandingEdit = () => {
             )}
           </div>
         )}
-        <div className="flex flex-col">
+        <div className="flex flex-col justify-center">
           {slot.type === 'text' ? (
             <>
-              <div className="flex items-center gap-1">
+              {(!isEffectivelyEmpty(slot.name) || (isEditingThisSlot && editingBrandingField === 'name')) && (
+                <div className="flex items-center gap-1">
+                  <span
+                    ref={nameRef}
+                    contentEditable={isEditingThisSlot && editingBrandingField === 'name'}
+                    suppressContentEditableWarning
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      setEditingSlotKey(slotKey);
+                      setEditingBrandingField('name');
+                      onEditingChange?.(true);
+                      setTimeout(() => nameRef.current?.focus(), 0);
+                    }}
+                    onBlur={(e) => {
+                      commitBrandingEdit(e.currentTarget.innerHTML);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commitBrandingEdit(e.currentTarget.innerHTML);
+                      }
+                      if (e.key === 'Escape') cancelBrandingEdit();
+                    }}
+                    className={cn(
+                      "text-[10px] font-bold leading-tight rounded px-1 -mx-1 outline-none transition-all",
+                      isEditingThisSlot && editingBrandingField === 'name' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
+                    )}
+                    style={{ color: effectiveIsDark ? '#FFFFFF' : '#000000' }}
+                    dangerouslySetInnerHTML={{ __html: slot.name }}
+                    title="Duplo clique para editar"
+                  />
+
+                  {slot.isVerified && (
+                    <img 
+                      src="https://img.icons8.com/color/512/instagram-verification-badge.png" 
+                      className="w-2 h-2" 
+                      alt="Verified" 
+                    />
+                  )}
+                </div>
+              )}
+           
+              {(!isEffectivelyEmpty(slot.handle) || (isEditingThisSlot && editingBrandingField === 'handle')) && (
                 <span
-                  ref={nameRef}
-                  contentEditable={isEditingThisSlot && editingBrandingField === 'name'}
+                  ref={handleRef}
+                  contentEditable={isEditingThisSlot && editingBrandingField === 'handle'}
                   suppressContentEditableWarning
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => e.stopPropagation()}
                   onDoubleClick={(e) => {
                     e.stopPropagation();
                     setEditingSlotKey(slotKey);
-                    setEditingBrandingField('name');
+                    setEditingBrandingField('handle');
                     onEditingChange?.(true);
-                    setTimeout(() => nameRef.current?.focus(), 0);
+                    setTimeout(() => handleRef.current?.focus(), 0);
                   }}
                   onBlur={(e) => {
                     commitBrandingEdit(e.currentTarget.innerHTML);
@@ -206,54 +258,14 @@ const cancelBrandingEdit = () => {
                     if (e.key === 'Escape') cancelBrandingEdit();
                   }}
                   className={cn(
-                    "text-[10px] font-bold leading-none rounded px-1 -mx-1 outline-none transition-all",
-                    isEditingThisSlot && editingBrandingField === 'name' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
+                    "text-[8px] font-medium opacity-60 leading-tight rounded px-1 -mx-1 outline-none transition-all",
+                    isEditingThisSlot && editingBrandingField === 'handle' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
                   )}
-                  style={{ color: effectiveIsDark ? '#FFFFFF' : '#000000' }}
-                  dangerouslySetInnerHTML={{ __html: slot.name }}
+                  style={{ color: effectiveIsDark ? 'rgba(255, 255, 255, 0.8)' : '#4A4A4A' }}
+                  dangerouslySetInnerHTML={{ __html: slot.handle }}
                   title="Duplo clique para editar"
                 />
-
-                {slot.isVerified && (
-                  <img 
-                    src="https://img.icons8.com/color/512/instagram-verification-badge.png" 
-                    className="w-2 h-2" 
-                    alt="Verified" 
-                  />
-                )}
-              </div>
-           
-              <span
-                ref={handleRef}
-                contentEditable={isEditingThisSlot && editingBrandingField === 'handle'}
-                suppressContentEditableWarning
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  setEditingSlotKey(slotKey);
-                  setEditingBrandingField('handle');
-                  onEditingChange?.(true);
-                  setTimeout(() => handleRef.current?.focus(), 0);
-                }}
-                onBlur={(e) => {
-                  commitBrandingEdit(e.currentTarget.innerHTML);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    commitBrandingEdit(e.currentTarget.innerHTML);
-                  }
-                  if (e.key === 'Escape') cancelBrandingEdit();
-                }}
-                className={cn(
-                  "text-[8px] font-medium opacity-60 rounded px-1 -mx-1 outline-none transition-all",
-                  isEditingThisSlot && editingBrandingField === 'handle' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
-                )}
-                style={{ color: effectiveIsDark ? 'rgba(255, 255, 255, 0.8)' : '#4A4A4A' }}
-                dangerouslySetInnerHTML={{ __html: slot.handle }}
-                title="Duplo clique para editar"
-              />
+              )}
             </>
           ) : (
             <div className="flex items-center gap-2">

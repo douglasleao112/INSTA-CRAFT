@@ -20,6 +20,7 @@ homePosition?: { x: number; y: number }; // ✅ posição original
   avatarBorderColor: string;
   avatarBorderWidth: number;
   avatarBorderRadius: number;
+  avatarSize: number;
   showFrame: boolean;
 }
 

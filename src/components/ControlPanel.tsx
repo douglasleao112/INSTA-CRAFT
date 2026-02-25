@@ -617,27 +617,27 @@ onClick={() => onResetConfig?.()}
           
           { label: 'Fundo II', key: 'alternativeBackgroundColor', type: 'color' },
           { label: 'Título II', key: 'alternativePrimaryColor', type: 'color' },
-          { label: 'Subtítulo II', key: 'alternativeSecondaryColor', type: 'color' },
+          { label: 'Sub. II', key: 'alternativeSecondaryColor', type: 'color' },
           { label: 'Vinheta II', key: 'alternativeVignette', type: 'checkbox' },
           
           { label: 'Fundo III', key: 'thirdBackgroundColor', type: 'color' },
           { label: 'Título III', key: 'thirdPrimaryColor', type: 'color' },
-          { label: 'Subtítulo III', key: 'thirdSecondaryColor', type: 'color' },
+          { label: 'Sub. III', key: 'thirdSecondaryColor', type: 'color' },
           { label: 'Vinheta III', key: 'thirdVignette', type: 'checkbox' }
         ].map((item) => (
-          <div key={item.key} className="flex flex-col items-center gap-2">
+        <div key={item.key} className="flex flex-col items-center justify-center gap-2 h-[60px]">
             {item.type === 'color' ? (
               <input
                 type="color"
                 value={(config.branding as any)[item.key]}
                 onChange={(e) => handleBrandingChange(item.key as any, e.target.value)}
-                className="w-8 h-8 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                className="w-6 h-6 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
               />
             ) : (
               <button
                 onClick={() => handleBrandingChange(item.key as any, !(config.branding as any)[item.key])}
                 className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all border",
+                  "w-6 h-6 rounded-lg flex items-center justify-center transition-all border",
                   (config.branding as any)[item.key]
                     ? "bg-indigo-600 border-indigo-600 text-white"
                     : "bg-white border-black/5 text-gray-300"
@@ -651,6 +651,10 @@ onClick={() => onResetConfig?.()}
         ))}
       </div>
     </div>
+
+
+{/* linha separadora */}
+<div className="my-6 border-t border-black/5" />
 
     {/* Assinatura Section */}
     <div className="space-y-6">
@@ -968,6 +972,25 @@ onClick={() => onResetConfig?.()}
                     const radius = parseInt(e.target.value);
                     handleBrandingChange('signatures', Object.fromEntries(
                       Object.entries(config.branding.signatures).map(([k, v]) => [k, { ...(v as any), avatarBorderRadius: radius }])
+                    ));
+                  }}
+                  className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Tamanho
+                </label>
+                <input
+                  type="range"
+                  min="4"
+                  max="40"
+                  value={(Object.values(config.branding.signatures).find((s: any) => s.enabled) as any)?.avatarSize || 40}
+                  onChange={(e) => {
+                    const size = parseInt(e.target.value);
+                    handleBrandingChange('signatures', Object.fromEntries(
+                      Object.entries(config.branding.signatures).map(([k, v]) => [k, { ...(v as any), avatarSize: size }])
                     ));
                   }}
                   className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
