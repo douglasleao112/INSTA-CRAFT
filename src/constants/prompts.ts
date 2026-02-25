@@ -253,36 +253,35 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 ## 🟪 TEMPLATE PRINCIPAL - Estrutura visível 
 #Entregar sempre em markdown, sem números, sem linha divisória, sem descrição, somente a frase:
 
-ESCREVER O TEXTO 1 EM CAIXA ALTA, COM 10 A 15 PALAVRAS.
-Escrever o subtexto 2 em Sentence case, com 20 a 35 palavras.
+ESCREVER O TEXTO 1 EM CAIXA ALTA, COM 15 A 20 PALAVRAS.(saltar linha)
+Escrever o subtexto 2 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 2 em Sentence case, com 10 a 15 palavras.
-Escrever o subtexto 4 em Sentence case, com 20 a 35 palavras.
+Escrever o Texto 2 em Sentence case, com 20 a 25 palavras.(saltar linha)
+Escrever o subtexto 4 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 5 em Sentence case, com 7 a 10 palavras.
-Escrever o subtexto 6 em Sentence case, com 20 a 35 palavras.
+Escrever o Texto 5 em Sentence case, com 15 a 20 palavras.(saltar linha)
+Escrever o subtexto 6 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 7 em Sentence case, com 10 a 15 palavras.
-Escrever o subtexto 8 em Sentence case, com 20 a 35 palavras.
+Escrever o Texto 7 em Sentence case, com 20 a 25 palavras.(saltar linha)
+Escrever o subtexto 8 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 9 em Sentence case, com 10 a 15 palavras.
-Escrever o subtexto 10 em Sentence case, com 20 a 35 palavras.
+Escrever o Texto 9 em Sentence case, com 20 a 25 palavras.(saltar linha)
+Escrever o subtexto 10 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 11 em Sentence case, com 10 a 15 palavras.
-Escrever o subtexto 12 em Sentence case, com 20 a 35 palavras.
+Escrever o Texto 11 em Sentence case, com 20 a 25 palavras.(saltar linha)
+Escrever o subtexto 12 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 13 em Sentence case, com 10 a 15 palavras.
-Escrever o subtexto 14 em Sentence case, com 20 a 35 palavras.
+Escrever o Texto 13 em Sentence case, com 20 a 25 palavras.(saltar linha)
+Escrever o subtexto 14 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 15 em Sentence case, com 10 a 15 palavras.
-Escrever o subtexto 16 em Sentence case, com 20 a 35 palavras.
+Escrever o Texto 15 em Sentence case, com 20 a 25 palavras.(saltar linha)
+Escrever o subtexto 16 em Sentence case, com 20 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 17 em Sentence case, com 20 a 25 palavras.
-Escrever o subtexto 18 em Sentence case, o fechamento real da narrativa com 25 a 35 palavras.
+Escrever o Texto 17 em Sentence case, com 30 a 35 palavras.(saltar linha)
+Escrever o subtexto 18 em Sentence case, o fechamento real da narrativa com 25 a 35 palavras.(saltar linha)
 (saltar linha)
-Escrever o Texto 19 em Sentence case, com 10 a 15 palavras.
-Escrever o subtexto 20 em Sentence case, é a direção levando o leitor a uma ação/reflexão, com 7 a 10 palavras.
-
+Escrever o Texto 19 em Sentence case, com 20 a 25 palavras.(saltar linha)
+Escrever o subtexto 20 em Sentence case, é a direção levando o leitor a uma ação/reflexão, com 7 a 10 palavras.(saltar linha)
 
 Ao final perguntar:
 

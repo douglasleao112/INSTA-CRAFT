@@ -373,7 +373,8 @@ export default function App() {
     try {
       const slideElements = document.querySelectorAll('.slide-capture');
       
-      for (let i = 0; i < slideElements.length; i++) {
+      // Download from last to first
+      for (let i = slideElements.length - 1; i >= 0; i--) {
         const el = slideElements[i] as HTMLElement;
         const dataUrl = await toPng(el, { 
           pixelRatio: 2,
@@ -387,7 +388,7 @@ export default function App() {
         link.click();
         
         // Pequeno delay para evitar que o navegador bloqueie múltiplos downloads
-        if (i < slideElements.length - 1) {
+        if (i > 0) {
           await new Promise(resolve => setTimeout(resolve, 400));
         }
       }
