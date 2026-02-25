@@ -65,6 +65,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 }) => {
 
   const [activeTab, setActiveTab] = useState<'ideia' | 'branding' | 'content' | 'fotos'>('ideia');
+  const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
@@ -276,6 +277,7 @@ const handleBrandingChange = (key: keyof Branding, value: any) => {
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
+    setShowAllPhotos(false);
     const newImages: string[] = [];
     let processed = 0;
 
@@ -488,7 +490,10 @@ onClick={() => onResetConfig?.()}
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => {
+                  setActiveTab(tab.id as any);
+                  setShowAllPhotos(false);
+                }}
                 className={cn(
                   "flex-1 py-3 flex flex-col items-center gap-1 transition-all",
                   activeTab === tab.id ? "text-indigo-600 bg-indigo-50/50" : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
@@ -579,7 +584,7 @@ onClick={() => onResetConfig?.()}
           ))}
         </div>
       </div>
-
+ 
       <div>
         <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">
           Slides ({config.slideCount})
@@ -592,34 +597,55 @@ onClick={() => onResetConfig?.()}
           onChange={(e) => updateConfig({ slideCount: parseInt(e.target.value) })}
           className="w-full accent-indigo-600"
         />
-        <div className="flex justify-between mt-1 text-[10px] font-bold text-gray-400">
-          <span>1</span>
-          <span>10</span>
-        </div>
+     
       </div>
     </div>
 
     {/* Palette Section */}
-    <div className="bg-gray-50 p-4 rounded-2xl border border-black/5">
-      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">
+    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">
         Paleta de Cores
       </label>
-      <div className="grid grid-cols-3 gap-y-4 gap-x-3">
+    
+    <div className="bg-gray-50 p-4 rounded-2xl border border-black/5">
+      
+      <div className="grid grid-cols-4 gap-y-6 gap-x-2">
         {[
-          { label: 'Fundo', key: 'backgroundColor' },
-          { label: 'Título', key: 'primaryColor' },
-          { label: 'Subtítulo', key: 'secondaryColor' },
-          { label: 'Fundo II', key: 'alternativeBackgroundColor' },
-          { label: 'Título II', key: 'alternativePrimaryColor' },
-          { label: 'Subtítulo II', key: 'alternativeSecondaryColor' }
+          { label: 'Fundo', key: 'backgroundColor', type: 'color' },
+          { label: 'Título', key: 'primaryColor', type: 'color' },
+          { label: 'Subtítulo', key: 'secondaryColor', type: 'color' },
+          { label: 'Vinheta', key: 'vignette', type: 'checkbox' },
+          
+          { label: 'Fundo II', key: 'alternativeBackgroundColor', type: 'color' },
+          { label: 'Título II', key: 'alternativePrimaryColor', type: 'color' },
+          { label: 'Subtítulo II', key: 'alternativeSecondaryColor', type: 'color' },
+          { label: 'Vinheta II', key: 'alternativeVignette', type: 'checkbox' },
+          
+          { label: 'Fundo III', key: 'thirdBackgroundColor', type: 'color' },
+          { label: 'Título III', key: 'thirdPrimaryColor', type: 'color' },
+          { label: 'Subtítulo III', key: 'thirdSecondaryColor', type: 'color' },
+          { label: 'Vinheta III', key: 'thirdVignette', type: 'checkbox' }
         ].map((item) => (
           <div key={item.key} className="flex flex-col items-center gap-2">
-            <input
-              type="color"
-              value={(config.branding as any)[item.key]}
-              onChange={(e) => handleBrandingChange(item.key as any, e.target.value)}
-              className="w-10 h-10 rounded-xl cursor-pointer border-none p-0 overflow-hidden shadow-sm"
-            />
+            {item.type === 'color' ? (
+              <input
+                type="color"
+                value={(config.branding as any)[item.key]}
+                onChange={(e) => handleBrandingChange(item.key as any, e.target.value)}
+                className="w-8 h-8 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+              />
+            ) : (
+              <button
+                onClick={() => handleBrandingChange(item.key as any, !(config.branding as any)[item.key])}
+                className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all border",
+                  (config.branding as any)[item.key]
+                    ? "bg-indigo-600 border-indigo-600 text-white"
+                    : "bg-white border-black/5 text-gray-300"
+                )}
+              >
+                <Check className={cn("w-4 h-4 transition-transform", (config.branding as any)[item.key] ? "scale-100" : "scale-0")} />
+              </button>
+            )}
             <span className="text-[9px] font-bold text-gray-500 uppercase text-center leading-tight">{item.label}</span>
           </div>
         ))}
@@ -1113,15 +1139,21 @@ Subtítulo do slide 2`}
             {uploadedImages.length} Fotos Carregadas
           </span>
           <button 
-            onClick={() => setUploadedImages([])}
+            onClick={() => {
+              setUploadedImages([]);
+              setShowAllPhotos(false);
+            }}
             className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase"
           >
             Limpar
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
-          {uploadedImages.slice(0, 8).map((img, i) => (
+        <div className={cn(
+          "grid grid-cols-4 gap-2",
+          showAllPhotos ? "max-h-[300px] overflow-y-auto pr-1 custom-scrollbar" : ""
+        )}>
+          {(showAllPhotos ? uploadedImages : uploadedImages.slice(0, uploadedImages.length > 12 ? 11 : 12)).map((img, i) => (
             <div key={i} className="group relative aspect-square rounded-lg overflow-hidden border border-black/5 bg-gray-100">
               <img src={img} className="w-full h-full object-cover" alt="" />
               <button
@@ -1136,10 +1168,13 @@ Subtítulo do slide 2`}
             </div>
           ))}
 
-          {uploadedImages.length > 8 && (
-            <div className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400 border border-black/5">
-              +{uploadedImages.length - 8}
-            </div>
+          {!showAllPhotos && uploadedImages.length > 12 && (
+            <button 
+              onClick={() => setShowAllPhotos(true)}
+              className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400 border border-black/5 hover:bg-gray-200 transition-colors"
+            >
+              +{uploadedImages.length - 11}
+            </button>
           )}
         </div>
       </div>

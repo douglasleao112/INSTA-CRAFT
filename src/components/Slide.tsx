@@ -291,6 +291,15 @@ const cancelBrandingEdit = () => {
   const slideBg = data.backgroundColor || branding.backgroundColor;
   const isFullBg = data.layout === 'full-bg';
 
+  const isAltBg = slideBg === branding.alternativeBackgroundColor;
+  const isThirdBg = slideBg === branding.thirdBackgroundColor;
+  const isMainBg = !isAltBg && !isThirdBg;
+
+  const showVignette = 
+    (isMainBg && branding.vignette) ||
+    (isAltBg && branding.alternativeVignette) ||
+    (isThirdBg && branding.thirdVignette);
+
   const isDarkBg = (color: string) => {
     const hex = color.replace('#', '');
     if (hex.length !== 6) return false;
@@ -334,18 +343,40 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
   }
 
   const currentBg = data.backgroundColor || branding.backgroundColor;
-  const nextBg =
-    currentBg === branding.backgroundColor
-      ? branding.alternativeBackgroundColor
-      : branding.backgroundColor;
+  let nextBg = branding.backgroundColor;
+  
+  if (currentBg === branding.backgroundColor) {
+    nextBg = branding.alternativeBackgroundColor;
+  } else if (currentBg === branding.alternativeBackgroundColor) {
+    nextBg = branding.thirdBackgroundColor;
+  } else {
+    nextBg = branding.backgroundColor;
+  }
 
   setActivePresetIndex(null);
   onUpdate?.({ backgroundColor: nextBg });
 };
 
   const renderLayout = () => {
-    const headlineColor = effectiveIsDark ? branding.alternativePrimaryColor : branding.primaryColor;
-    const subheadlineColor = effectiveIsDark ? branding.alternativeSecondaryColor : branding.secondaryColor;
+    const currentBg = data.backgroundColor || branding.backgroundColor;
+    
+    let headlineColor = branding.primaryColor;
+    let subheadlineColor = branding.secondaryColor;
+
+    if (isFullBg) {
+      headlineColor = branding.alternativePrimaryColor;
+      subheadlineColor = branding.alternativeSecondaryColor;
+    } else if (currentBg === branding.alternativeBackgroundColor) {
+      headlineColor = branding.alternativePrimaryColor;
+      subheadlineColor = branding.alternativeSecondaryColor;
+    } else if (currentBg === branding.thirdBackgroundColor) {
+      headlineColor = branding.thirdPrimaryColor;
+      subheadlineColor = branding.thirdSecondaryColor;
+    } else {
+      const isDark = isDarkBg(currentBg);
+      headlineColor = isDark ? branding.alternativePrimaryColor : branding.primaryColor;
+      subheadlineColor = isDark ? branding.alternativeSecondaryColor : branding.secondaryColor;
+    }
 
     const hPos = data.headlinePos || { x: 0, y: 0 };
     const sPos = data.subheadlinePos || { x: 0, y: 0 };
@@ -492,8 +523,8 @@ case 'full-bg':
         </span>
       </div>
 
-      {/* Gradiente por cima da imagem */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-20 pointer-events-none" />
+     {/* Gradiente por cima da imagem (mais escuro embaixo) */}
+<div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-20 pointer-events-none" />
 
       {/* Texto em cima (continua editável) */}
     <div 
@@ -753,6 +784,10 @@ onDoubleClick={(e) => {
 
       {renderLayout()}
       
+      {showVignette && (
+        <div className="absolute inset-0 pointer-events-none z-[25] bg-[radial-gradient(circle,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
+      )}
+
       {/* Signature Slots */}
       {(Object.entries(branding.signatures) as [keyof Branding['signatures'], SignatureSlot][]).map(([key, slot]) => 
         renderSignature(key, slot)

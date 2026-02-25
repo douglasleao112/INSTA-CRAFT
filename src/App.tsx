@@ -16,11 +16,17 @@ const INITIAL_CONFIG: CarouselConfig = {
   branding: {
     backgroundColor: '#FFFFFF',
     alternativeBackgroundColor: '#06060b',
+    thirdBackgroundColor: '#83141c',
     primaryColor: '#1A1A1A',
     alternativePrimaryColor: '#FFFFFF',
+    thirdPrimaryColor: '#FFFFFF',
     secondaryColor: '#4A4A4A',
     alternativeSecondaryColor: '#FFFFFF',
+    thirdSecondaryColor: '#FFFFFF',
     highlightColor: '#242f9c',
+    vignette: false,
+    alternativeVignette: false,
+    thirdVignette: true,
     handle: '@usuario',
     name: 'Usuário',
     imageRadius: 14,
@@ -272,30 +278,46 @@ export default function App() {
       }
     }
 
-    // Determine which slides will have the alternative background (1 or 2 slides, excluding the first)
+    // Determine which slides will have alternative backgrounds (excluding the first)
     // Regra: Nunca um do lado do outro
     const altBgIndices: number[] = [];
-    if (batchSize > 2) {
-      const count = Math.random() > 0.5 ? 2 : 1;
+    const thirdBgIndices: number[] = [];
+    
+    if (batchSize > 1) {
       const availableIndices = Array.from({ length: batchSize - 1 }, (_, i) => i + 1);
       
-      for (let i = 0; i < count; i++) {
-        if (availableIndices.length === 0) break;
-        
+      // Force at least one for Third Background
+      if (availableIndices.length > 0) {
         const randomIndex = Math.floor(Math.random() * availableIndices.length);
         const selectedIndex = availableIndices[randomIndex];
-        altBgIndices.push(selectedIndex);
+        thirdBgIndices.push(selectedIndex);
         
-        // Remove o selecionado e seus vizinhos imediatos para evitar adjacência
+        // Remove selected and neighbors
         const toRemove = [selectedIndex - 1, selectedIndex, selectedIndex + 1];
         toRemove.forEach(val => {
           const idx = availableIndices.indexOf(val);
           if (idx !== -1) availableIndices.splice(idx, 1);
         });
       }
-    } else if (batchSize === 2) {
-      // Se tiver só 2 slides, o segundo pode ser Alt
-      if (Math.random() > 0.5) altBgIndices.push(1);
+
+      // Add some for Alternative Background if still available
+      if (availableIndices.length > 0) {
+        const count = Math.random() > 0.5 ? 2 : 1;
+        for (let i = 0; i < count; i++) {
+          if (availableIndices.length === 0) break;
+          
+          const randomIndex = Math.floor(Math.random() * availableIndices.length);
+          const selectedIndex = availableIndices[randomIndex];
+          altBgIndices.push(selectedIndex);
+          
+          // Remove selected and neighbors
+          const toRemove = [selectedIndex - 1, selectedIndex, selectedIndex + 1];
+          toRemove.forEach(val => {
+            const idx = availableIndices.indexOf(val);
+            if (idx !== -1) availableIndices.splice(idx, 1);
+          });
+        }
+      }
     }
 
     const newBatch: SlideData[] = Array.from({ length: batchSize }).map((_, i) => {
@@ -314,6 +336,7 @@ export default function App() {
       }
 
       const useAltBg = altBgIndices.includes(i);
+      const useThirdBg = thirdBgIndices.includes(i);
 
       let image = existingSlide?.image || `https://picsum.photos/seed/${i + 100}/1080/1350`;
       
@@ -321,6 +344,10 @@ export default function App() {
       if (imagesPool.length > 0) {
         image = imagesPool[i];
       }
+
+      let backgroundColor = config.branding.backgroundColor;
+      if (useAltBg) backgroundColor = config.branding.alternativeBackgroundColor;
+      if (useThirdBg) backgroundColor = config.branding.thirdBackgroundColor;
 
       return {
         id: existingSlide?.id || crypto.randomUUID(),
@@ -331,7 +358,7 @@ export default function App() {
         headlinePos,
         subheadlinePos,
         imagePos,
-        backgroundColor: useAltBg ? config.branding.alternativeBackgroundColor : config.branding.backgroundColor,
+        backgroundColor,
       };
     });
 
@@ -493,11 +520,11 @@ export default function App() {
                 "flex items-center gap-2 pl-6 pr-4 py-2.5 bg-indigo-600 text-white rounded-l-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all border-r border-white/20",
                 isDownloading ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
               )}
-              onClick={downloadAll}
+              onClick={downloadIndividual}
               disabled={isDownloading}
             >
               <Download className="w-4 h-4" />
-              {isDownloading ? 'Gerando...' : 'Baixar ZIP'}
+              {isDownloading ? 'Gerando...' : 'Baixar'}
             </button>
             <button
               className={cn(
@@ -536,21 +563,6 @@ export default function App() {
                       <div className="flex flex-col">
                         <span>Arquivo ZIP</span>
                         <span className="text-[10px] text-gray-400 font-medium">Todos os slides em um arquivo</span>
-                      </div>
-                    </button>
-                    <button
-                      className="w-full px-4 py-4 text-left text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-3 border-t border-black/5"
-                      onClick={() => {
-                        downloadIndividual();
-                        setShowDownloadMenu(false);
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <Download className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span>Arquivos Separados</span>
-                        <span className="text-[10px] text-gray-400 font-medium">Download individual de cada slide</span>
                       </div>
                     </button>
                   </motion.div>

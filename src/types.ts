@@ -26,11 +26,17 @@ homePosition?: { x: number; y: number }; // ✅ posição original
 export interface Branding {
   backgroundColor: string;
   alternativeBackgroundColor: string;
+  thirdBackgroundColor: string;
   primaryColor: string;
   alternativePrimaryColor: string;
+  thirdPrimaryColor: string;
   secondaryColor: string;
   alternativeSecondaryColor: string;
+  thirdSecondaryColor: string;
   highlightColor: string;
+  vignette: boolean;
+  alternativeVignette: boolean;
+  thirdVignette: boolean;
   handle: string;
   name: string;
   imageRadius: number;
