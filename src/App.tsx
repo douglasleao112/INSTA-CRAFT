@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ControlPanel } from './components/ControlPanel';
 import { Slide } from './components/Slide';
 import { CarouselConfig, SlideData } from './types';
-import { Download, RefreshCcw } from 'lucide-react';
+import { Download, RefreshCcw, ChevronDown, Layers } from 'lucide-react';
 import { TextToolbar } from './components/TextToolbar';
 import { cn } from './lib/utils';
 import { toPng } from 'html-to-image';
@@ -15,9 +15,11 @@ const INITIAL_CONFIG: CarouselConfig = {
   slideCount: 10,
   branding: {
     backgroundColor: '#FFFFFF',
-    alternativeBackgroundColor: '#333333',
+    alternativeBackgroundColor: '#06060b',
     primaryColor: '#1A1A1A',
+    alternativePrimaryColor: '#FFFFFF',
     secondaryColor: '#4A4A4A',
+    alternativeSecondaryColor: '#FFFFFF',
     highlightColor: '#242f9c',
     handle: '@usuario',
     name: 'Usuário',
@@ -124,7 +126,7 @@ export default function App() {
         const parsed = JSON.parse(saved);
         return { 
           ...INITIAL_CONFIG, 
-          branding: parsed.branding || INITIAL_CONFIG.branding,
+          branding: { ...INITIAL_CONFIG.branding, ...parsed.branding },
           isGlobalBranding: parsed.isGlobalBranding ?? INITIAL_CONFIG.isGlobalBranding,
           aspectRatio: parsed.aspectRatio || INITIAL_CONFIG.aspectRatio,
           slideCount: parsed.slideCount || INITIAL_CONFIG.slideCount
@@ -140,6 +142,7 @@ export default function App() {
   const [zoom, setZoom] = useState(1);
   const [isTextEditing, setIsTextEditing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const [presets, setPresets] = useState<(SlideData | null)[]>(() => {
@@ -260,6 +263,15 @@ export default function App() {
     const randomLayouts = allLayouts; // Agora permite full-bg em qualquer slide
     const batchSize = config.slideCount;
 
+    // Prepare images pool to ensure random distribution without repetition until all are used
+    let imagesPool: string[] = [];
+    if (uploadedImages.length > 0) {
+      while (imagesPool.length < batchSize) {
+        const shuffled = [...uploadedImages].sort(() => Math.random() - 0.5);
+        imagesPool = [...imagesPool, ...shuffled];
+      }
+    }
+
     // Determine which slides will have the alternative background (1 or 2 slides, excluding the first)
     // Regra: Nunca um do lado do outro
     const altBgIndices: number[] = [];
@@ -305,10 +317,9 @@ export default function App() {
 
       let image = existingSlide?.image || `https://picsum.photos/seed/${i + 100}/1080/1350`;
       
-      // If we have uploaded images, apply them randomly/sequentially
-      if (uploadedImages.length > 0) {
-        const shuffled = [...uploadedImages].sort(() => Math.random() - 0.5);
-        image = shuffled[i % shuffled.length];
+      // If we have uploaded images, apply them from the prepared pool
+      if (imagesPool.length > 0) {
+        image = imagesPool[i];
       }
 
       return {
@@ -350,6 +361,38 @@ export default function App() {
       saveAs(content, 'carrossel-insta.zip');
     } catch (error) {
       console.error('Erro ao baixar imagens:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const downloadIndividual = async () => {
+    if (config.slides.length === 0) return;
+    setIsDownloading(true);
+    
+    try {
+      const slideElements = document.querySelectorAll('.slide-capture');
+      
+      for (let i = 0; i < slideElements.length; i++) {
+        const el = slideElements[i] as HTMLElement;
+        const dataUrl = await toPng(el, { 
+          pixelRatio: 2,
+          skipFonts: false,
+          fontEmbedCSS: ''
+        });
+        
+        const link = document.createElement('a');
+        link.download = `slide-${i + 1}.png`;
+        link.href = dataUrl;
+        link.click();
+        
+        // Pequeno delay para evitar que o navegador bloqueie múltiplos downloads
+        if (i < slideElements.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 400));
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao baixar imagens individuais:', error);
     } finally {
       setIsDownloading(false);
     }
@@ -443,17 +486,77 @@ export default function App() {
  Centralizar 
 </button>
           
-          <button 
-            className={cn(
-              "flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all",
-              isDownloading ? "opacity-70 cursor-not-allowed" : "hover:scale-105 active:scale-95"
-            )}
-            onClick={downloadAll}
-            disabled={isDownloading}
-          >
-            <Download className="w-4 h-4" />
-            {isDownloading ? 'Gerando...' : 'Baixar Imagens'}
-          </button>
+          <div className="relative flex items-center">
+            <button 
+              className={cn(
+                "flex items-center gap-2 pl-6 pr-4 py-2.5 bg-indigo-600 text-white rounded-l-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all border-r border-white/20",
+                isDownloading ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
+              )}
+              onClick={downloadAll}
+              disabled={isDownloading}
+            >
+              <Download className="w-4 h-4" />
+              {isDownloading ? 'Gerando...' : 'Baixar ZIP'}
+            </button>
+            <button
+              className={cn(
+                "px-3 py-2.5 bg-indigo-600 text-white rounded-r-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all",
+                isDownloading ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
+              )}
+              onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+              disabled={isDownloading}
+            >
+              <ChevronDown className={cn("w-4 h-4 transition-transform", showDownloadMenu && "rotate-180")} />
+            </button>
+
+            <AnimatePresence>
+              {showDownloadMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowDownloadMenu(false)}
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-black/5 overflow-hidden z-50"
+                  >
+                    <button
+                      className="w-full px-4 py-4 text-left text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      onClick={() => {
+                        downloadAll();
+                        setShowDownloadMenu(false);
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span>Arquivo ZIP</span>
+                        <span className="text-[10px] text-gray-400 font-medium">Todos os slides em um arquivo</span>
+                      </div>
+                    </button>
+                    <button
+                      className="w-full px-4 py-4 text-left text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-3 border-t border-black/5"
+                      onClick={() => {
+                        downloadIndividual();
+                        setShowDownloadMenu(false);
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <Download className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span>Arquivos Separados</span>
+                        <span className="text-[10px] text-gray-400 font-medium">Download individual de cada slide</span>
+                      </div>
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </header>
 

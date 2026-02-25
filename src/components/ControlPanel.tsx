@@ -14,6 +14,7 @@ import {
   Plus,
   Trash2,
   Send,
+  Camera,
   Sparkles,
   MessageSquare,
   X,
@@ -90,6 +91,16 @@ const [isTypingIntro, setIsTypingIntro] = useState(true);
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useEffect(() => {
+    if (activeTab === 'ideia') {
+      // Use a small timeout to ensure the tab content is rendered before scrolling
+      const timer = setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     scrollToBottom();
@@ -281,10 +292,16 @@ const handleBrandingChange = (key: keyof Branding, value: any) => {
     });
   };
 
+  const stripHtml = (html: string) => {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
+
   // Sync local text with slides when they change (e.g. from AI)
   useEffect(() => {
     const text = config.slides
-      .map(s => `${s.headline || ''}\n${s.subheadline || ''}`.trim())
+      .map(s => `${stripHtml(s.headline || '')}\n${stripHtml(s.subheadline || '')}`.trim())
       .filter(t => t.length > 0)
       .join('\n\n');
     
@@ -406,7 +423,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
 
   return (
     <motion.div
-      drag={!isPinned && !isMinimized}
+      drag={!isPinned && !isMinimized && !tempImage}
       dragMomentum={false}
       dragTransition={{ power: 0 }}
       initial={false}
@@ -590,12 +607,14 @@ onClick={() => onResetConfig?.()}
       <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">
         Paleta de Cores
       </label>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-y-4 gap-x-3">
         {[
           { label: 'Fundo', key: 'backgroundColor' },
-          { label: 'Fundo II', key: 'alternativeBackgroundColor' },
           { label: 'Título', key: 'primaryColor' },
-          { label: 'Sub', key: 'secondaryColor' }
+          { label: 'Subtítulo', key: 'secondaryColor' },
+          { label: 'Fundo II', key: 'alternativeBackgroundColor' },
+          { label: 'Título II', key: 'alternativePrimaryColor' },
+          { label: 'Subtítulo II', key: 'alternativeSecondaryColor' }
         ].map((item) => (
           <div key={item.key} className="flex flex-col items-center gap-2">
             <input
@@ -604,7 +623,7 @@ onClick={() => onResetConfig?.()}
               onChange={(e) => handleBrandingChange(item.key as any, e.target.value)}
               className="w-10 h-10 rounded-xl cursor-pointer border-none p-0 overflow-hidden shadow-sm"
             />
-            <span className="text-[9px] font-bold text-gray-500 uppercase">{item.label}</span>
+            <span className="text-[9px] font-bold text-gray-500 uppercase text-center leading-tight">{item.label}</span>
           </div>
         ))}
       </div>
@@ -767,25 +786,25 @@ onClick={() => onResetConfig?.()}
                   <>
                     <div className="space-y-2 relative">
                       <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="Título"
-                          value={slot.name}
-                          onChange={(e) => updateSlot({ name: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-black/5 bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-indigo-500/20"
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => updateSlot({ name: e.currentTarget.innerHTML })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-black/5 bg-white text-sm font-medium text-gray-900 outline-none transition-all focus:ring-2 focus:ring-indigo-500/20 min-h-[42px] empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 reset-rich-text"
+                          data-placeholder="Título"
+                          dangerouslySetInnerHTML={{ __html: slot.name }}
                         />
-                     
                       </div>
 
                       <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="Subtítulo"
-                          value={slot.handle}
-                          onChange={(e) => updateSlot({ handle: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-black/5 bg-white text-[12px] outline-none transition-all focus:ring-2 focus:ring-indigo-500/20"
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => updateSlot({ handle: e.currentTarget.innerHTML })}
+                          className="w-full px-4 py-2.5 rounded-xl border border-black/5 bg-white text-[12px] font-normal text-gray-500 outline-none transition-all focus:ring-2 focus:ring-indigo-500/20 min-h-[38px] empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 reset-rich-text"
+                          data-placeholder="Subtítulo"
+                          dangerouslySetInnerHTML={{ __html: slot.handle }}
                         />
-                      
                       </div>
                     </div>
 
@@ -843,7 +862,7 @@ onClick={() => onResetConfig?.()}
                     alt=""
                   />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                    <Camera className="w-5 h-5 text-indigo-600" />
                   </div>
                 </>
               ) : (

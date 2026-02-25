@@ -64,16 +64,35 @@ export const CropModal: React.FC<CropModalProps> = ({ image, onCropComplete, onC
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden flex flex-col shadow-2xl">
-        <div className="p-4 border-b border-black/5 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-tight">Enquadrar Foto</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-400" />
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+      onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div className="bg-[#06060b] rounded-[32px] w-full max-w-lg aspect-square overflow-hidden flex flex-col shadow-2xl relative border border-white/10">
+        {/* Top Controls */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-20 pointer-events-none">
+          <button 
+            onClick={handleDone} 
+            className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl transition-all pointer-events-auto border border-white/10 group"
+            title="Confirmar"
+          >
+            <Check className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+          </button>
+          
+          <button 
+            onClick={onClose} 
+            className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl transition-all pointer-events-auto border border-white/10 group"
+            title="Fechar"
+          >
+            <X className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
           </button>
         </div>
 
-        <div className="relative h-[400px] bg-gray-900">
+        <div 
+          className="relative flex-1 bg-black"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <Cropper
             image={image}
             crop={crop}
@@ -82,34 +101,11 @@ export const CropModal: React.FC<CropModalProps> = ({ image, onCropComplete, onC
             onCropChange={onCropChange}
             onCropComplete={onCropCompleteInternal}
             onZoomChange={onZoomChange}
+            classes={{
+              containerClassName: "bg-black",
+              mediaClassName: "bg-black",
+            }}
           />
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-[10px] font-bold uppercase text-gray-400">
-              <span>Zoom</span>
-              <span className="text-indigo-600">{Math.round(zoom * 100)}%</span>
-            </div>
-            <input
-              type="range"
-              value={zoom}
-              min={1}
-              max={3}
-              step={0.1}
-              aria-labelledby="Zoom"
-              onChange={(e) => setZoom(Number(e.target.value))}
-              className="w-full accent-indigo-600 h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer"
-            />
-          </div>
-
-          <button
-            onClick={handleDone}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
-          >
-            <Check className="w-4 h-4" />
-            Confirmar Enquadramento
-          </button>
         </div>
       </div>
     </div>

@@ -140,3 +140,22 @@
   font-style: italic;
   color: #4b5563;
 }
+
+/* ContentEditable Placeholder */
+[contenteditable]:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+  display: block;
+}
+
+/* Reset rich text styles for sidebar inputs */
+.reset-rich-text * {
+  font-size: inherit !important;
+  color: inherit !important;
+  background-color: transparent !important;
+  text-decoration: inherit !important;
+  font-style: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}

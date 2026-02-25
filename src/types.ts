@@ -27,7 +27,9 @@ export interface Branding {
   backgroundColor: string;
   alternativeBackgroundColor: string;
   primaryColor: string;
+  alternativePrimaryColor: string;
   secondaryColor: string;
+  alternativeSecondaryColor: string;
   highlightColor: string;
   handle: string;
   name: string;
@@ -65,8 +67,8 @@ export interface Branding {
 }
 
 export interface SlideData {
-  headlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number };
-  subheadlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number };
+  headlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number; color?: string };
+  subheadlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number; color?: string };
   id: string;
   headline: string;
   subheadline: string;
