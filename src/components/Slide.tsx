@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AspectRatio, Branding, SlideData, LayoutType, SignatureSlot } from '../types';
 import { cn } from '../lib/utils';
-import { BadgeCheck, Trash2, Plus, X, Palette, Type, ChevronDown, Baseline } from 'lucide-react';
+import { BadgeCheck, Trash2, Plus, X } from 'lucide-react';
 import { TextToolbar } from './TextToolbar';
 
 const LAYOUTS: { type: LayoutType; label: string }[] = [
@@ -48,8 +48,6 @@ export const Slide = React.memo<SlideProps>(({
   const [editingSlotKey, setEditingSlotKey] = useState<keyof Branding['signatures'] | null>(null);
   const [editingHeadline, setEditingHeadline] = useState(false);
   const [editingSubheadline, setEditingSubheadline] = useState(false);
-  const [showSlideStyle, setShowSlideStyle] = useState(false);
-  const [activeStyleTab, setActiveStyleTab] = useState<'headline' | 'subheadline'>('headline');
 
 const commitBrandingEdit = (value: string) => {
   if (editingSlotKey && editingBrandingField) {
@@ -353,22 +351,6 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
     const sPos = data.subheadlinePos || { x: 0, y: 0 };
     const iPos = data.imagePos || { x: 0, y: 0 };
 
-    const headlineStyle: React.CSSProperties = {
-      color: data.headlineStyle?.color || (effectiveIsDark ? branding.alternativePrimaryColor : branding.primaryColor),
-      fontFamily: data.headlineStyle?.fontFamily || branding.typography.headlineFontFamily,
-      fontSize: data.headlineStyle?.fontSize ? `${data.headlineStyle.fontSize}px` : undefined,
-      fontWeight: data.headlineStyle?.fontWeight || undefined,
-      textShadow: isFullBg ? '0 2px 4px rgba(0,0,0,0.3)' : 'none'
-    };
-
-    const subheadlineStyle: React.CSSProperties = {
-      color: data.subheadlineStyle?.color || (effectiveIsDark ? branding.alternativeSecondaryColor : branding.secondaryColor),
-      fontFamily: data.subheadlineStyle?.fontFamily || branding.typography.subheadlineFontFamily,
-      fontSize: data.subheadlineStyle?.fontSize ? `${data.subheadlineStyle.fontSize}px` : undefined,
-      fontWeight: data.subheadlineStyle?.fontWeight || undefined,
-      textShadow: isFullBg ? '0 1px 2px rgba(0,0,0,0.3)' : 'none'
-    };
-
     const headlineElement = (
       <motion.div
         drag={!editingHeadline}
@@ -408,7 +390,10 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
             "text-2xl font-extrabold leading-tight mb-4 outline-none rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
             editingHeadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5"
           )}
-          style={headlineStyle}
+          style={{ 
+            color: headlineColor,
+            textShadow: isFullBg ? '0 2px 4px rgba(0,0,0,0.3)' : 'none'
+          }}
           dangerouslySetInnerHTML={{ __html: data.headline }}
           title="Arraste para mover | Duplo clique para editar"
         />
@@ -454,7 +439,10 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
             "text-lg font-medium opacity-90 outline-none rounded-lg px-2 -mx-2 cursor-grab active:cursor-grabbing",
             editingSubheadline ? "ring-2 ring-indigo-500/50 bg-indigo-50/10 cursor-text" : "hover:bg-white/5"
           )}
-          style={subheadlineStyle}
+          style={{ 
+            color: subheadlineColor,
+            textShadow: isFullBg ? '0 1px 2px rgba(0,0,0,0.3)' : 'none'
+          }}
           dangerouslySetInnerHTML={{ __html: data.subheadline }}
           title="Arraste para mover | Duplo clique para editar"
         />
@@ -851,174 +839,6 @@ onDoubleClick={(e) => {
     {/* DIVISOR VERTICAL */}
     <div className="mx-2 h-7 w-px bg-black/10" />
 
-    {/* Slide Style Button */}
-    <div className="relative">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowSlideStyle(!showSlideStyle);
-        }}
-        className={cn(
-          "w-8 h-8 rounded-lg border-2 transition-all flex items-center justify-center",
-          showSlideStyle ? "border-indigo-500 bg-indigo-50 text-indigo-600" : "border-transparent text-gray-400 hover:bg-black/5"
-        )}
-        title="Estilo do Slide"
-      >
-        <Palette className="w-4 h-4" />
-      </button>
-
-      <AnimatePresence>
-        {showSlideStyle && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-64 bg-white border border-black/10 shadow-2xl rounded-2xl p-4 z-[100]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Estilo do Slide</span>
-              <button onClick={() => setShowSlideStyle(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X className="w-3 h-3 text-gray-400" />
-              </button>
-            </div>
-
-            <div className="flex gap-1 mb-4 p-1 bg-gray-50 rounded-xl">
-              <button
-                onClick={() => setActiveStyleTab('headline')}
-                className={cn(
-                  "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all",
-                  activeStyleTab === 'headline' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                )}
-              >
-                TÍTULO
-              </button>
-              <button
-                onClick={() => setActiveStyleTab('subheadline')}
-                className={cn(
-                  "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all",
-                  activeStyleTab === 'subheadline' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                )}
-              >
-                SUBTÍTULO
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Font Size */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[9px] font-bold uppercase text-gray-400">
-                  <span>Tamanho</span>
-                  <span className="text-indigo-600">
-                    {activeStyleTab === 'headline' 
-                      ? (data.headlineStyle?.fontSize || branding.typography.headlineFontSize) 
-                      : (data.subheadlineStyle?.fontSize || branding.typography.subheadlineFontSize)}px
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="120"
-                  value={activeStyleTab === 'headline' 
-                    ? (data.headlineStyle?.fontSize || branding.typography.headlineFontSize) 
-                    : (data.subheadlineStyle?.fontSize || branding.typography.subheadlineFontSize)}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    const key = activeStyleTab === 'headline' ? 'headlineStyle' : 'subheadlineStyle';
-                    onUpdate?.({ [key]: { ...(data[key] || {}), fontSize: val } });
-                  }}
-                  className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-
-              {/* Color */}
-              <div className="space-y-1.5">
-                <span className="text-[9px] font-bold uppercase text-gray-400">Cor</span>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={activeStyleTab === 'headline' 
-                      ? (data.headlineStyle?.color || (effectiveIsDark ? branding.alternativePrimaryColor : branding.primaryColor)) 
-                      : (data.subheadlineStyle?.color || (effectiveIsDark ? branding.alternativeSecondaryColor : branding.secondaryColor))}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const key = activeStyleTab === 'headline' ? 'headlineStyle' : 'subheadlineStyle';
-                      onUpdate?.({ [key]: { ...(data[key] || {}), color: val } });
-                    }}
-                    className="w-8 h-8 rounded-lg cursor-pointer border-none p-0 overflow-hidden shadow-sm"
-                  />
-                  <button
-                    onClick={() => {
-                      const key = activeStyleTab === 'headline' ? 'headlineStyle' : 'subheadlineStyle';
-                      const nextData = { ...data[key] };
-                      delete nextData.color;
-                      onUpdate?.({ [key]: nextData });
-                    }}
-                    className="text-[9px] font-bold text-gray-400 hover:text-red-500 uppercase"
-                  >
-                    Resetar
-                  </button>
-                </div>
-              </div>
-
-              {/* Font Family */}
-              <div className="space-y-1.5">
-                <span className="text-[9px] font-bold uppercase text-gray-400">Fonte</span>
-                <select
-                  value={activeStyleTab === 'headline' 
-                    ? (data.headlineStyle?.fontFamily || branding.typography.headlineFontFamily) 
-                    : (data.subheadlineStyle?.fontFamily || branding.typography.subheadlineFontFamily)}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const key = activeStyleTab === 'headline' ? 'headlineStyle' : 'subheadlineStyle';
-                    onUpdate?.({ [key]: { ...(data[key] || {}), fontFamily: val } });
-                  }}
-                  className="w-full p-2 rounded-xl border border-black/5 bg-gray-50 text-[10px] font-bold focus:outline-none"
-                >
-                  {['Inter', 'Plus Jakarta Sans', 'Playfair Display', 'JetBrains Mono', 'Impact', 'Arial'].map(f => (
-                    <option key={f} value={f}>{f}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Font Weight */}
-              <div className="flex items-center justify-between pt-2 border-t border-black/5">
-                <span className="text-[9px] font-bold uppercase text-gray-400">Negrito</span>
-                <button
-                  onClick={() => {
-                    const key = activeStyleTab === 'headline' ? 'headlineStyle' : 'subheadlineStyle';
-                    const currentWeight = data[key]?.fontWeight || (activeStyleTab === 'headline' ? branding.typography.headlineFontWeight : branding.typography.subheadlineFontWeight);
-                    const newVal = currentWeight >= 700 ? 400 : 700;
-                    onUpdate?.({ [key]: { ...(data[key] || {}), fontWeight: newVal } });
-                  }}
-                  className={cn(
-                    "w-8 h-5 rounded-full transition-all relative",
-                    (activeStyleTab === 'headline' 
-                      ? (data.headlineStyle?.fontWeight || branding.typography.headlineFontWeight) 
-                      : (data.subheadlineStyle?.fontWeight || branding.typography.subheadlineFontWeight)) >= 700
-                      ? "bg-indigo-600"
-                      : "bg-gray-200"
-                  )}
-                >
-                  <div className={cn(
-                    "absolute top-1 w-3 h-3 bg-white rounded-full transition-all",
-                    (activeStyleTab === 'headline' 
-                      ? (data.headlineStyle?.fontWeight || branding.typography.headlineFontWeight) 
-                      : (data.subheadlineStyle?.fontWeight || branding.typography.subheadlineFontWeight)) >= 700
-                      ? "left-4"
-                      : "left-1"
-                  )} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-
-    {/* DIVISOR VERTICAL */}
-    <div className="mx-2 h-7 w-px bg-black/10" />
-
   {/* PRESETS: números compactados + + no final com o mesmo gap */}
 <div className="flex items-center gap-2">
   {presets.map((preset, i) => {
@@ -1040,8 +860,6 @@ onDoubleClick={(e) => {
         subheadlinePos: preset.subheadlinePos,
         imagePos: preset.imagePos,
         backgroundColor: preset.backgroundColor,
-        headlineStyle: preset.headlineStyle,
-        subheadlineStyle: preset.subheadlineStyle,
       });
     }}
     className={cn(

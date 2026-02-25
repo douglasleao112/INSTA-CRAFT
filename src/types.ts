@@ -67,8 +67,8 @@ export interface Branding {
 }
 
 export interface SlideData {
-  headlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number; color?: string };
-  subheadlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number; color?: string };
+  headlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number };
+  subheadlineStyle?: { fontFamily?: string; fontSize?: number; fontWeight?: number };
   id: string;
   headline: string;
   subheadline: string;

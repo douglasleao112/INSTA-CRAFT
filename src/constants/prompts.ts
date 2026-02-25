@@ -251,7 +251,7 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 ---
 
 ## 🟪 TEMPLATE PRINCIPAL - Estrutura visível 
-#Entregar sempre em markdown, sem números ou descrição, somente frase):
+#Entregar sempre em markdown, sem números, sem linha divisória, sem descrição, somente a frase:
 
 ESCREVER O TEXTO 1 EM CAIXA ALTA, COM 10 A 15 PALAVRAS.
 Escrever o subtexto 2 em Sentence case, com 20 a 35 palavras.
@@ -297,11 +297,10 @@ Ao final perguntar:
 ## 🟪 LEGENDA (se solicitado)
 
 Formato AIDA:
-
-- Trecho com intuito de gerar Atenção com 10 a 15 palavras  
-- Etapa para gerar Interesse com 10 a 15 palavras  
-- Etapa para gerar Desejo com 10 a 15 palavras  
-- Ação para levar a interagir, paragrafo com 7 a 10 palavras
+- Trecho com intuito de gerar Atenção com 20 a 25 palavras  
+- Etapa para gerar Interesse com 30 a 35 palavras  
+- Etapa para gerar Desejo com 30 a 35 palavras  
+- Ação para levar a interagir, paragrafo com 20 a 25 palavras
 
 #Entregar somente o texto para usar na rede social.
 # Sem explicações e tópicos, salte uma linha entre cada bloco.

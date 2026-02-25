@@ -520,9 +520,6 @@ onClick={() => onResetConfig?.()}
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {formatMarkdown(m.text)}
                           </ReactMarkdown>
-                          {i === 0 && m.role === 'model' && isTypingIntro && (
-                            <span className="inline-block w-[6px] ml-1 animate-pulse">|</span>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -1166,3 +1163,4 @@ Subtítulo do slide 2`}
     </motion.div>
   );
 };
+
