@@ -598,8 +598,13 @@ onClick={() => onResetConfig?.()}
   </div>
 )}
 
-          {activeTab === 'branding' && (
-  <div className="space-y-6">
+{activeTab === 'branding' && (
+  <div
+    className={cn(
+      "space-y-6",
+      isPinned && "max-w-[380px] mx-auto w-full px-1"
+    )}
+  >
     {/* Engine Settings moved to Branding */}
     <div className="space-y-6 pb-6 border-b border-black/5">
       <div>
@@ -623,7 +628,7 @@ onClick={() => onResetConfig?.()}
           ))}
         </div>
       </div>
- 
+
       <div>
         <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">
           Slides ({config.slideCount})
@@ -636,7 +641,6 @@ onClick={() => onResetConfig?.()}
           onChange={(e) => updateConfig({ slideCount: parseInt(e.target.value) })}
           className="w-full accent-indigo-600"
         />
-     
       </div>
     </div>
 
