@@ -22,7 +22,7 @@ interface TextToolbarProps {
   className?: string;
 }
 
-const LineHeightIcon = () => (
+const LineHeightIcon = ({ className }: { className?: string }) => (
   <svg
     width="16"
     height="16"
@@ -32,6 +32,7 @@ const LineHeightIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    className={className}
   >
     <line x1="12" y1="3" x2="12" y2="21" />
     <polyline points="8 7 12 3 16 7" />

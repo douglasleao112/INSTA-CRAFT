@@ -24,7 +24,8 @@ import {
   PinOff,
   Minimize2,
   CircleMinus,
-  RectangleVertical
+  RectangleVertical,
+  Terminal
 } from 'lucide-react';
 import { AspectRatio, LayoutType, Branding, SlideData, SignatureSlot, CarouselConfig } from '../types';
 import { cn } from '../lib/utils';
@@ -64,7 +65,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   setUploadedImages
 }) => {
 
-  const [activeTab, setActiveTab] = useState<'ideia' | 'branding' | 'content' | 'fotos'>('ideia');
+  const [activeTab, setActiveTab] = useState<'ideia' | 'prompt' | 'branding' | 'content' | 'fotos'>('ideia');
+  const [customPrompt, setCustomPrompt] = useState(() => {
+    return localStorage.getItem('custom-engine-prompt') || ENGINE_PROMPT;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('custom-engine-prompt', customPrompt);
+  }, [customPrompt]);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -198,7 +206,7 @@ const sigs = config.branding.signatures;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: [
-              { role: 'system', content: ENGINE_PROMPT },
+              { role: 'system', content: customPrompt },
               ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.text })),
               { role: 'user', content: userMessage }
             ]
@@ -225,7 +233,7 @@ const sigs = config.branding.signatures;
           const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
-              { role: 'system' as 'system', content: ENGINE_PROMPT },
+              { role: 'system' as 'system', content: customPrompt },
               ...messages.map(m => ({ 
                 role: (m.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user', 
                 content: m.text 
@@ -252,7 +260,7 @@ const sigs = config.branding.signatures;
         const chat = ai.chats.create({
           model: "gemini-3.1-pro-preview",
           config: {
-            systemInstruction: ENGINE_PROMPT,
+            systemInstruction: customPrompt,
           },
           history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
         });
@@ -339,6 +347,7 @@ const handleBrandingChange = (key: keyof Branding, value: any) => {
 
   const tabs = [
     { id: 'ideia', icon: MessageSquare, label: 'Ideia' },
+    { id: 'prompt', icon: Terminal, label: 'Prompt' },
     { id: 'branding', icon: Palette, label: 'Branding' },
     { id: 'content', icon: Type, label: 'Conteúdo' },
     { id: 'fotos', icon: ImageIcon, label: 'Fotos' },
@@ -560,6 +569,31 @@ onClick={() => onResetConfig?.()}
                   >
                     <Send className="w-4 h-4" />
                   </button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'prompt' && (
+              <div className="flex flex-col h-[50vh]">
+                <div className="flex-grow overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar">
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    Este é o prompt base que a Inteligência Artificial usa para gerar o conteúdo. Você pode alterá-lo para ajustar o comportamento da IA. As alterações são salvas automaticamente no seu navegador.
+                  </p>
+                  <textarea
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value)}
+                    className="w-full h-[35vh] p-3 bg-gray-50 border border-black/5 rounded-2xl text-[10px] font-mono resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 custom-scrollbar"
+                    placeholder="Digite o prompt aqui..."
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setCustomPrompt(ENGINE_PROMPT)}
+                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 uppercase tracking-wider"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Restaurar Padrão
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
