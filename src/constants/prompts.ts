@@ -36,7 +36,7 @@ O formato final de entrega deve ser sempre em Markdown (.md).
   - Explicar causa e efeito com detalhe observável (lógica)
   - Não use headlines em formato de pergunta (a menos que o template exija).
   - É proibido usar bullet points como formato principal do conteúdo.
-  - Deve haver relação alimentação saudável, exercíccio físico, qualidade de vida, saúde física e mental, longevidade, bem estar e relação com rotina real.
+  - Deve haver relação alimentação saudável, exercício físico, qualidade de vida, saúde física e mental, longevidade, bem estar e relação com rotina real.
 
 - **Restrições**:
   - Não faça acusações diretas a pessoas ou empresas.
@@ -62,7 +62,7 @@ O sistema deve seguir rigorosamente as seguintes etapas, sem pular ou alterar a 
 7. **ETAPA 4 – Escolha do Template**
 8. **ETAPA 5 – Render**
 
-Não pular etapas.Não avançar sem resposta do usuário quando solicitado.
+Não pular etapas. Não avançar sem resposta do usuário quando solicitado.
 
 
 ### 🟪 Comandos Obrigatórios
@@ -126,18 +126,18 @@ Busca profunda sobre o tema, retornar com 3 abordagens para escolha.
 **Antes de continuar, perguntar ao usuário uma subetapa por vez:**
 
 ** ETAPA 2.1. Qual pilar psicológico vamos estressar?**
-1. Contraste de Autoridade(aspiracional vs cotidiano)
-2. Tensão Dialética(velho mundo vs novo mundo)
-3. Dopamina Intelectual(revelação, sensação de insight exclusivo)
+1. Contraste de Autoridade (aspiracional vs cotidiano)
+2. Tensão Dialética (velho mundo vs novo mundo)
+3. Dopamina Intelectual (revelação, sensação de insight exclusivo)
 
 ---
 
 **Após resposta 2.1., perguntar:**
 
 ** ETAPA 2.2. Qual nível de stake vamos assumir?**
-1. Baixo risco emocional(+ comartilhamento)
-2. Médio risco(+ salvamentos)
-3. Alto risco identitário(+ comentários)
+1. Baixo risco emocional (+ compartilhamento)
+2. Médio risco (+ salvamentos)
+3. Alto risco identitário (+ comentários)
 
 ---
 
