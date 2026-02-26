@@ -372,7 +372,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
       top: '50%',
       width: '90%',
       maxWidth: '1000px',
-      height: 'auto',
+      height: '90vh', 
       borderRadius: '24px',
     },
     unpinned: {
@@ -382,7 +382,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
       top: '80px',
       width: '320px',
       maxWidth: '320px',
-      height: 'auto',
+      height: '85vh',
       borderRadius: '24px',
     },
     minimized: {
@@ -444,7 +444,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
       animate={isMinimized ? "minimized" : (isPinned ? "pinned" : "unpinned")}
       variants={panelVariants}
       transition={{ type: 'spring', damping: 30, stiffness: 250 }}
-      className="fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden"
+      className="fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div 
@@ -457,7 +457,7 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
         {!isMinimized && (
           <div className="flex items-center gap-2">
             <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Engine Content</span>
+              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Engine Content</span>
             </div>
           </div>
         )}
@@ -520,9 +520,9 @@ onClick={() => onResetConfig?.()}
           </div>
 
           {/* Content */}
-          <div className="p-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          <div className="p-5 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {activeTab === 'ideia' && (
-              <div className="flex flex-col h-[50vh]">
+              <div className="flex flex-col h-full min-h-0">
                 <div className="flex-grow overflow-y-auto space-y-2 mb-4 pr-2 custom-scrollbar">
                   {messages.map((m, i) => (
                     <div key={i} className={cn(
@@ -573,30 +573,30 @@ onClick={() => onResetConfig?.()}
               </div>
             )}
 
-            {activeTab === 'prompt' && (
-              <div className="flex flex-col h-[50vh]">
-                <div className="flex-grow overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar">
-                  <p className="text-[11px] text-gray-500 leading-relaxed">
-                    Este é o prompt base que a Inteligência Artificial usa para gerar o conteúdo. Você pode alterá-lo para ajustar o comportamento da IA. As alterações são salvas automaticamente no seu navegador.
-                  </p>
-                  <textarea
-                    value={customPrompt}
-                    onChange={(e) => setCustomPrompt(e.target.value)}
-                    className="w-full h-[35vh] p-3 bg-gray-50 border border-black/5 rounded-2xl text-[10px] font-mono resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 custom-scrollbar"
-                    placeholder="Digite o prompt aqui..."
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => setCustomPrompt(ENGINE_PROMPT)}
-                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 uppercase tracking-wider"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      Restaurar Padrão
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+         {activeTab === 'prompt' && (
+  <div className="flex flex-col h-full min-h-0">
+    <p className="text-[11px] text-gray-500 leading-relaxed mb-3">
+      Prompt IA padrão para gerar conteúdo, pode ser alterado e salvo automaticamente no navegador.
+    </p>
+
+    <textarea
+      value={customPrompt}
+      onChange={(e) => setCustomPrompt(e.target.value)}
+      className="w-full flex-1 min-h-0 p-3 bg-gray-50 border border-black/5 rounded-2xl text-[10px] font-mono resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 custom-scrollbar"
+      placeholder="Digite o prompt aqui..."
+    />
+
+    <div className="flex justify-end mt-3">
+      <button
+        onClick={() => setCustomPrompt(ENGINE_PROMPT)}
+        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 uppercase tracking-wider"
+      >
+        <RotateCcw className="w-3 h-3" />
+        Restaurar Padrão
+      </button>
+    </div>
+  </div>
+)}
 
           {activeTab === 'branding' && (
   <div className="space-y-6">
@@ -1121,23 +1121,38 @@ onClick={() => onResetConfig?.()}
   </div>
 )}
 
-            {activeTab === 'content' && (
-              <div className="space-y-4">
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block">Texto do Carrossel</label>
-                    <textarea
-                  rows={10}
-                  className="w-full p-4 rounded-2xl border border-black/5 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none font-medium"
-                  placeholder={`Título do Slide 1
+{activeTab === 'content' && (
+  <div className="flex flex-col h-full min-h-0">
+    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-3">
+      Texto do Carrossel
+    </label>
+
+    <textarea
+      className="w-full flex-1 min-h-0 p-4 rounded-2xl border border-black/5 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none font-medium custom-scrollbar"
+      placeholder={`Título do Slide 1
 Subtítulo do slide 1
 
 Título do Slide 2
-Subtítulo do slide 2`}
-                  onChange={(e) => handleTextContentChange(e.target.value)}
-                  value={localText}
-                />
-               
-              </div>
-            )}
+Subtítulo do slide 2
+
+Título do Slide 3
+Subtítulo do slide 3
+
+Título do Slide 4
+Subtítulo do slide 4
+
+Título do Slide 5
+Subtítulo do slide 5
+
+Título do Slide 6
+Subtítulo do slide 6
+
+...`}
+      onChange={(e) => handleTextContentChange(e.target.value)}
+      value={localText}
+    />
+  </div>
+)}
 
    {activeTab === 'fotos' && (
   <div className="space-y-6">
