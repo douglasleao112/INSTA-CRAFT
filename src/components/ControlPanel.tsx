@@ -582,7 +582,7 @@ onClick={() => onResetConfig?.()}
     <textarea
       value={customPrompt}
       onChange={(e) => setCustomPrompt(e.target.value)}
-      className="w-full flex-1 min-h-0 p-3 bg-gray-50 border border-black/5 rounded-2xl text-[10px] font-mono resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 custom-scrollbar"
+      className="w-full flex-1 min-h-0 p-3 bg-gray-50 border border-black/5 rounded-2xl text-[12px] font-mono resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 custom-scrollbar"
       placeholder="Digite o prompt aqui..."
     />
 

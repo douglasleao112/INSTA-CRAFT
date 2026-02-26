@@ -1,6 +1,4 @@
-export const ENGINE_PROMPT = `
-
-# 🔮 ENGINE CONTENT *Desenvolvido por InstaCraft®*
+export const ENGINE_PROMPT = `# 🔮 ENGINE CONTENT *Desenvolvido por InstaCraft®*
 
 ---
 
@@ -296,7 +294,4 @@ Formato AIDA:
 - Ação para levar a interagir, paragrafo com 20 a 25 palavras
 
 #Entregar somente o texto para usar na rede social.
-# Sem explicações e tópicos, salte uma linha entre cada bloco.
-
-
-`;
+# Sem explicações e tópicos, salte uma linha entre cada bloco.`;
