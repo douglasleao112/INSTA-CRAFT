@@ -6,7 +6,7 @@ import { CarouselConfig, SlideData } from './types';
 import { Download, RefreshCcw, ChevronDown, Layers } from 'lucide-react';
 import { TextToolbar } from './components/TextToolbar';
 import { cn } from './lib/utils';
-import { toPng } from 'html-to-image';
+import { domToPng } from 'modern-screenshot';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -374,17 +374,48 @@ export default function App() {
     if (config.slides.length === 0) return;
     setIsDownloading(true);
     
+    // Save current zoom and position
+    const currentZoom = zoom;
+    const currentPos = workspacePos;
+    
+    // Reset zoom and position for accurate capture
+    setZoom(1);
+    setWorkspacePos({ x: 0, y: 0 });
+    
+    // Wait for React to render the un-zoomed state
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     try {
       const zip = new JSZip();
       const slideElements = document.querySelectorAll('.slide-capture');
       
       for (let i = 0; i < slideElements.length; i++) {
         const el = slideElements[i] as HTMLElement;
-        const dataUrl = await toPng(el, { 
-          pixelRatio: 2,
-          skipFonts: false,
-          fontEmbedCSS: ''
+        
+        // DOM scaling trick to prevent text wrapping issues
+        const originalTransform = el.style.transform;
+        const originalTransformOrigin = el.style.transformOrigin;
+        
+        el.style.transform = 'scale(3)';
+        el.style.transformOrigin = 'top left';
+        
+        // Wait a tick for layout to update
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        const dataUrl = await domToPng(el, {
+          scale: 1,
+          width: el.clientWidth * 3,
+          height: el.clientHeight * 3,
+          style: {
+            transform: 'scale(3)',
+            transformOrigin: 'top left'
+          }
         });
+        
+        // Revert DOM scaling
+        el.style.transform = originalTransform;
+        el.style.transformOrigin = originalTransformOrigin;
+        
         const base64Data = dataUrl.split(',')[1];
         zip.file(`slide-${i + 1}.png`, base64Data, { base64: true });
       }
@@ -394,6 +425,9 @@ export default function App() {
     } catch (error) {
       console.error('Erro ao baixar imagens:', error);
     } finally {
+      // Restore zoom and position
+      setZoom(currentZoom);
+      setWorkspacePos(currentPos);
       setIsDownloading(false);
     }
   };
@@ -402,17 +436,47 @@ export default function App() {
     if (config.slides.length === 0) return;
     setIsDownloading(true);
     
+    // Save current zoom and position
+    const currentZoom = zoom;
+    const currentPos = workspacePos;
+    
+    // Reset zoom and position for accurate capture
+    setZoom(1);
+    setWorkspacePos({ x: 0, y: 0 });
+    
+    // Wait for React to render the un-zoomed state
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     try {
       const slideElements = document.querySelectorAll('.slide-capture');
       
       // Download from last to first
       for (let i = slideElements.length - 1; i >= 0; i--) {
         const el = slideElements[i] as HTMLElement;
-        const dataUrl = await toPng(el, { 
-          pixelRatio: 2,
-          skipFonts: false,
-          fontEmbedCSS: ''
+        
+        // DOM scaling trick to prevent text wrapping issues
+        const originalTransform = el.style.transform;
+        const originalTransformOrigin = el.style.transformOrigin;
+        
+        el.style.transform = 'scale(3)';
+        el.style.transformOrigin = 'top left';
+        
+        // Wait a tick for layout to update
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        const dataUrl = await domToPng(el, {
+          scale: 1,
+          width: el.clientWidth * 3,
+          height: el.clientHeight * 3,
+          style: {
+            transform: 'scale(3)',
+            transformOrigin: 'top left'
+          }
         });
+        
+        // Revert DOM scaling
+        el.style.transform = originalTransform;
+        el.style.transformOrigin = originalTransformOrigin;
         
         const link = document.createElement('a');
         link.download = `slide-${i + 1}.png`;
@@ -427,6 +491,9 @@ export default function App() {
     } catch (error) {
       console.error('Erro ao baixar imagens individuais:', error);
     } finally {
+      // Restore zoom and position
+      setZoom(currentZoom);
+      setWorkspacePos(currentPos);
       setIsDownloading(false);
     }
   };
@@ -664,6 +731,22 @@ export default function App() {
   ))}
 </motion.div>
       </main>
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isDownloading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center"
+          >
+            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+            <h2 className="text-2xl font-bold text-gray-800">Gerando Imagens...</h2>
+            <p className="text-gray-500 mt-2">Por favor, aguarde enquanto preparamos seu carrossel em alta resolução.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

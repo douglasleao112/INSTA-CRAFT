@@ -509,15 +509,9 @@ case 'full-bg':
       {/* Imagem (se existir) */}
       {data.image ? (
         <motion.img
-          drag
-          dragMomentum={false}
-          animate={{ x: iPos.x, y: iPos.y }}
-          onDragEnd={(_, info) => {
-            setActivePresetIndex(null);
-            onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
-          }}
+          animate={{ x: 0, y: 0 }}
           src={data.image}
-          className="absolute inset-0 w-full h-full object-cover cursor-grab active:cursor-grabbing"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           alt=""
           draggable={false}
           data-imageframe="true"
