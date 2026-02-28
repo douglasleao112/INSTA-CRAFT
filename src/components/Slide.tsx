@@ -49,6 +49,36 @@ export const Slide = React.memo<SlideProps>(({
   const [editingHeadline, setEditingHeadline] = useState(false);
   const [editingSubheadline, setEditingSubheadline] = useState(false);
 
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const subheadlineRef = useRef<HTMLParagraphElement>(null);
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const handleRef = useRef<HTMLSpanElement>(null);
+
+  React.useEffect(() => {
+    if (activeElement === null) return;
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      if ((window as any).isColorPickerOpen) return;
+      
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-toolbar="true"]')) return;
+      
+      if (activeElement === 'headline' && headlineRef.current?.contains(target)) return;
+      if (activeElement === 'subheadline' && subheadlineRef.current?.contains(target)) return;
+      if (activeElement === 'branding-name' && nameRef.current?.contains(target)) return;
+      if (activeElement === 'branding-handle' && handleRef.current?.contains(target)) return;
+      
+      // Click is outside, blur the active element
+      if (activeElement === 'headline') headlineRef.current?.blur();
+      if (activeElement === 'subheadline') subheadlineRef.current?.blur();
+      if (activeElement === 'branding-name') nameRef.current?.blur();
+      if (activeElement === 'branding-handle') handleRef.current?.blur();
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeElement]);
+
 const commitBrandingEdit = (value: string) => {
   if (editingSlotKey && editingBrandingField) {
     onBrandingUpdate?.({
@@ -72,10 +102,6 @@ const cancelBrandingEdit = () => {
   setEditingSlotKey(null);
   onEditingChange?.(false);
 };
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const subheadlineRef = useRef<HTMLParagraphElement>(null);
-  const nameRef = useRef<HTMLSpanElement>(null);
-  const handleRef = useRef<HTMLSpanElement>(null);
 
  const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -205,6 +231,7 @@ const cancelBrandingEdit = () => {
                       setTimeout(() => nameRef.current?.focus(), 0);
                     }}
                     onBlur={(e) => {
+                      if ((window as any).isColorPickerOpen) return;
                       commitBrandingEdit(e.currentTarget.innerHTML);
                     }}
                     onKeyDown={(e) => {
@@ -248,6 +275,7 @@ const cancelBrandingEdit = () => {
                     setTimeout(() => handleRef.current?.focus(), 0);
                   }}
                   onBlur={(e) => {
+                    if ((window as any).isColorPickerOpen) return;
                     commitBrandingEdit(e.currentTarget.innerHTML);
                   }}
                   onKeyDown={(e) => {
@@ -421,6 +449,7 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
             setTimeout(() => headlineRef.current?.focus(), 0);
           }}
           onBlur={(e) => {
+            if ((window as any).isColorPickerOpen) return;
             const html = e.currentTarget.innerHTML;
             handleTextChange('headline', html);
             setEditingHeadline(false);
@@ -470,6 +499,7 @@ const toggleBackgroundColor = (e: React.MouseEvent) => {
             setTimeout(() => subheadlineRef.current?.focus(), 0);
           }}
           onBlur={(e) => {
+            if ((window as any).isColorPickerOpen) return;
             const html = e.currentTarget.innerHTML;
             handleTextChange('subheadline', html);
             setEditingSubheadline(false);

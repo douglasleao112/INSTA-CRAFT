@@ -13,7 +13,8 @@ import {
   Type,
   Plus,
   CaseSensitive,
-  ArrowUpDown
+  ArrowUpDown,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -51,9 +52,35 @@ export const TextToolbar: React.FC<TextToolbarProps> = ({ className }) => {
   const [showTransform, setShowTransform] = React.useState(false);
   const [showTextColor, setShowTextColor] = React.useState(false);
   const [showHighlightColor, setShowHighlightColor] = React.useState(false);
-  const textColorInputRef = React.useRef<HTMLInputElement>(null);
-  const highlightColorInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const [customTextColors, setCustomTextColors] = React.useState<string[]>([]);
+  const [customHighlightColors, setCustomHighlightColors] = React.useState<string[]>([]);
 
+  const TEXT_COLORS = ['#000000', '#4B5563', '#9CA3AF', '#FFFFFF', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#14B8A6', '#06B6D4', '#2DD4BF'];
+
+  const handleAddCustomTextColor = (color: string) => {
+    setCustomTextColors(prev => {
+      const newColors = [color, ...prev.filter(c => c !== color)].slice(0, 5);
+      return newColors;
+    });
+    exec('foreColor', color);
+  };
+
+  const handleAddCustomHighlightColor = (color: string) => {
+    setCustomHighlightColors(prev => {
+      const newColors = [color, ...prev.filter(c => c !== color)].slice(0, 5);
+      return newColors;
+    });
+    exec('hiliteColor', color);
+  };
+
+  const handlePreviewTextColor = (color: string) => {
+    exec('foreColor', color);
+  };
+
+  const handlePreviewHighlightColor = (color: string) => {
+    exec('hiliteColor', color);
+  };
 
 const getSelectedRange = () => {
   const sel = window.getSelection();
@@ -156,6 +183,7 @@ const applyLineHeight = (value: number) => {
         className
       )}
       onMouseDown={(e) => e.preventDefault()} // Prevent losing focus on click
+      data-toolbar="true"
     >
 {/* Font Selection */}
 <div className="relative border-r border-black/5">
@@ -488,15 +516,24 @@ const applyLineHeight = (value: number) => {
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Cores do Texto</span>
-                    <button 
-                      onClick={() => textColorInputRef.current?.click()}
-                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700"
-                    >
-                      + Add custom
-                    </button>
+                    <div className="relative overflow-hidden">
+                      <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">
+                        + Add custom
+                      </button>
+                      <input 
+                        type="color" 
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        onClick={() => { (window as any).isColorPickerOpen = true; }}
+                        onChange={(e) => handlePreviewTextColor(e.target.value)}
+                        onBlur={(e) => {
+                          handleAddCustomTextColor(e.target.value);
+                          setTimeout(() => { (window as any).isColorPickerOpen = false; }, 100);
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-5 gap-1.5">
-                    {['#000000', '#4B5563', '#9CA3AF', '#FFFFFF', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#14B8A6', '#06B6D4', '#2DD4BF'].map(color => (
+                    {TEXT_COLORS.map(color => (
                       <button 
                         key={color}
                         onClick={() => {
@@ -507,23 +544,52 @@ const applyLineHeight = (value: number) => {
                         style={{ backgroundColor: color }}
                       />
                     ))}
-                    <button 
-                      onClick={() => textColorInputRef.current?.click()}
-                      className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                    >
-                      <Plus className="w-3 h-3 text-gray-400" />
-                    </button>
+                    
+                    {/* Custom Colors Row */}
+                    {(customTextColors.length > 0) && (
+                      <div className="col-span-5 h-px bg-gray-100 my-1" />
+                    )}
+                    {customTextColors.map(color => (
+                      <div key={`custom-${color}`} className="relative group w-6 h-6">
+                        <button 
+                          onClick={() => {
+                            exec('foreColor', color);
+                            setShowTextColor(false);
+                          }}
+                          className="w-full h-full rounded-full border border-black/5 hover:scale-110 transition-transform shadow-sm"
+                          style={{ backgroundColor: color }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCustomTextColors(prev => prev.filter(c => c !== color));
+                          }}
+                          className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-white border border-gray-200 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-200 z-10"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {customTextColors.length < 5 && (
+                      <div className="relative w-6 h-6">
+                        <button className="w-full h-full rounded-full border border-dashed border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors">
+                          <Plus className="w-3 h-3 text-gray-400" />
+                        </button>
+                        <input 
+                          type="color" 
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          onClick={() => { (window as any).isColorPickerOpen = true; }}
+                          onChange={(e) => handlePreviewTextColor(e.target.value)}
+                          onBlur={(e) => {
+                            handleAddCustomTextColor(e.target.value);
+                            setTimeout(() => { (window as any).isColorPickerOpen = false; }, 100);
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
-                <input 
-                  type="color" 
-                  ref={textColorInputRef}
-                  className="hidden"
-                  onChange={(e) => {
-                    exec('foreColor', e.target.value);
-                    setShowTextColor(false);
-                  }}
-                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -550,15 +616,24 @@ const applyLineHeight = (value: number) => {
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Destaque</span>
-                    <button 
-                      onClick={() => highlightColorInputRef.current?.click()}
-                      className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700"
-                    >
-                      + Add custom
-                    </button>
+                    <div className="relative overflow-hidden">
+                      <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">
+                        + Add custom
+                      </button>
+                      <input 
+                        type="color" 
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        onClick={() => { (window as any).isColorPickerOpen = true; }}
+                        onChange={(e) => handlePreviewHighlightColor(e.target.value)}
+                        onBlur={(e) => {
+                          handleAddCustomHighlightColor(e.target.value);
+                          setTimeout(() => { (window as any).isColorPickerOpen = false; }, 100);
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-5 gap-1.5">
-                    {['#FFFF00', '#00FF00', '#00FFFF', '#FF00FF', '#FFA500', '#FFC0CB', '#E6E6FA', '#F0E68C', '#DDA0DD', '#98FB98', 'transparent'].map(color => (
+                    {[...TEXT_COLORS, 'transparent'].map(color => (
                       <button 
                         key={color}
                         onClick={() => {
@@ -572,23 +647,52 @@ const applyLineHeight = (value: number) => {
                         style={{ backgroundColor: color !== 'transparent' ? color : undefined }}
                       />
                     ))}
-                    <button 
-                      onClick={() => highlightColorInputRef.current?.click()}
-                      className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                    >
-                      <Plus className="w-3 h-3 text-gray-400" />
-                    </button>
+                    
+                    {/* Custom Colors Row */}
+                    {(customHighlightColors.length > 0) && (
+                      <div className="col-span-5 h-px bg-gray-100 my-1" />
+                    )}
+                    {customHighlightColors.map(color => (
+                      <div key={`custom-${color}`} className="relative group w-6 h-6">
+                        <button 
+                          onClick={() => {
+                            exec('hiliteColor', color);
+                            setShowHighlightColor(false);
+                          }}
+                          className="w-full h-full rounded-full border border-black/5 hover:scale-110 transition-transform shadow-sm"
+                          style={{ backgroundColor: color }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCustomHighlightColors(prev => prev.filter(c => c !== color));
+                          }}
+                          className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-white border border-gray-200 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-200 z-10"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {customHighlightColors.length < 5 && (
+                      <div className="relative w-6 h-6">
+                        <button className="w-full h-full rounded-full border border-dashed border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors">
+                          <Plus className="w-3 h-3 text-gray-400" />
+                        </button>
+                        <input 
+                          type="color" 
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          onClick={() => { (window as any).isColorPickerOpen = true; }}
+                          onChange={(e) => handlePreviewHighlightColor(e.target.value)}
+                          onBlur={(e) => {
+                            handleAddCustomHighlightColor(e.target.value);
+                            setTimeout(() => { (window as any).isColorPickerOpen = false; }, 100);
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
-                <input 
-                  type="color" 
-                  ref={highlightColorInputRef}
-                  className="hidden"
-                  onChange={(e) => {
-                    exec('hiliteColor', e.target.value);
-                    setShowHighlightColor(false);
-                  }}
-                />
               </motion.div>
             )}
           </AnimatePresence>
