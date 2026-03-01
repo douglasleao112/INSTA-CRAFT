@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
-import { Upload, Video, Settings, Play, Scissors, Type, LayoutTemplate, CheckCircle2, Download, RefreshCcw, Maximize2, Minimize2, Pin, PinOff, ChevronDown, FileArchive } from 'lucide-react';
+import { Upload, Video, Settings, Play, Scissors, Type, LayoutTemplate, CheckCircle2, Download, RefreshCcw, Maximize2, Minimize2, Pin, PinOff, ChevronDown, FileArchive, ZoomIn, ZoomOut } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface GeneratedClip {
@@ -10,6 +10,7 @@ interface GeneratedClip {
   duration: string;
   score: number;
   thumbnailUrl: string;
+  url?: string;
   description?: string;
 }
 
@@ -17,8 +18,19 @@ export function ReelsEditor() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [duration, setDuration] = useState('<30s');
   const [prompt, setPrompt] = useState('');
-  const [theme, setTheme] = useState('');
+  const [videoCount, setVideoCount] = useState('max');
+  const [videoSpeed, setVideoSpeed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('reels_video_speed') || '1';
+    }
+    return '1';
+  });
   const [aspectRatio, setAspectRatio] = useState('9:16');
+
+  useEffect(() => {
+    localStorage.setItem('reels_video_speed', videoSpeed);
+  }, [videoSpeed]);
+
   const [interactiveSubtitles, setInteractiveSubtitles] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
@@ -28,6 +40,7 @@ export function ReelsEditor() {
   const [isPinned, setIsPinned] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [scale, setScale] = useState(1);
   const [headerActionsContainer, setHeaderActionsContainer] = useState<HTMLElement | null>(null);
   const dragControls = useDragControls();
 
@@ -37,11 +50,37 @@ export function ReelsEditor() {
 
   const videoUrl = useMemo(() => videoFile ? URL.createObjectURL(videoFile) : '', [videoFile]);
 
+  const forceDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      window.open(url, '_blank');
+    }
+  };
+
   const downloadIndividual = async () => {
     setIsDownloading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    alert("Baixando vídeos individualmente...");
-    setIsDownloading(false);
+    try {
+      for (let i = 0; i < generatedClips.length; i++) {
+        const clip = generatedClips[i];
+        if (clip.url) {
+          await forceDownload(clip.url, `corte_${i + 1}.mp4`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const downloadZip = async () => {
@@ -116,26 +155,6 @@ export function ReelsEditor() {
     }
   };
 
-const themes = [
-  'Acadêmico',
-  'Avaliações de produtos',
-  'Comédia',
-  'Comentário',
-  'Comentário esportivo',
-  'Discurso motivacional',
-  'Igreja',
-  'Jogos',
-  'Lista',
-  'Marketing',
-  'Notícias',
-  'Outros',
-  'Perguntas e respostas',
-  'Podcast',
-  'Tutorial',
-  'Vlog',
-  'Webinar'
-];
-
   const processingSteps = [
     "Enviando vídeo para o servidor...",
     "Transcrevendo áudio e analisando contexto...",
@@ -149,6 +168,11 @@ const themes = [
       setVideoFile(e.target.files[0]);
       setGeneratedClips([]); // Reset clips on new upload
     }
+  };
+
+  const playSuccessSound = () => {
+    const audio = new Audio('https://cdn.pixabay.com/download/audio/2025/03/15/audio_b93784d8c1.mp3');
+    audio.play().catch(e => console.log('Audio play failed:', e));
   };
 
   const handleGenerate = async () => {
@@ -165,29 +189,39 @@ const themes = [
       if (currentStep < processingSteps.length - 1) {
         setProcessingStep(currentStep);
       }
-    }, 1500);
+    }, 3000);
 
     try {
       const formData = new FormData();
       formData.append('video', videoFile);
       formData.append('duration', duration);
       formData.append('prompt', prompt);
-      formData.append('theme', theme);
+      formData.append('videoCount', videoCount);
+      formData.append('videoSpeed', videoSpeed);
       formData.append('interactiveSubtitles', interactiveSubtitles.toString());
+      formData.append('aspectRatio', aspectRatio);
 
-      const response = await fetch('/api/generate-reels', {
+      // Envia para a VPS no EasyPanel
+      const response = await fetch('https://api-videos-api-videos.vexhyt.easypanel.host/api/process-video', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
+        let errorMsg = 'Erro ao processar o vídeo na VPS';
+        try {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Erro ao gerar cortes');
-        } else {
-          throw new Error('Servidor indisponível (HTML retornado em vez de JSON)');
+          if (errorData.error) {
+            errorMsg = `Erro da VPS: ${errorData.error}`;
+            if (errorData.details) {
+              errorMsg += `\nDetalhes: ${errorData.details}`;
+            }
+          }
+        } catch (e) {
+          // If response is not JSON, just use the status text
+          errorMsg = `Erro da VPS (${response.status}): ${response.statusText}`;
         }
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
@@ -195,11 +229,12 @@ const themes = [
       // Map the backend response to our GeneratedClip interface
       const newClips: GeneratedClip[] = data.clips.map((clip: any, index: number) => ({
         id: clip.id || String(index + 1),
-        title: clip.title,
-        duration: clip.duration,
-        score: clip.score,
-        thumbnailUrl: `https://picsum.photos/seed/${Math.random()}/400/700`, // Simulated thumbnail
-        description: clip.description
+        title: clip.title || `Corte Inteligente ${index + 1}`,
+        duration: clip.duration || '0:15',
+        score: clip.score || Math.floor(Math.random() * 20) + 80,
+        thumbnailUrl: clip.url || `https://picsum.photos/seed/${Math.random()}/400/700`, // Use the actual video URL if available
+        url: clip.url, // Store the actual video URL
+        description: clip.description || 'Corte gerado automaticamente pela IA.'
       }));
 
       clearInterval(interval);
@@ -208,60 +243,71 @@ const themes = [
       setTimeout(() => {
         setGeneratedClips(newClips);
         setIsProcessing(false);
+        playSuccessSound();
       }, 500);
 
     } catch (error: any) {
       console.error("Erro:", error);
       
-      // Fallback for static hosting (like Netlify) where the Express backend isn't running
-      if (error.message.includes('JSON') || error.message.includes('indisponível') || error.message.includes('Failed to fetch')) {
-        alert("Aviso: O servidor backend não está rodando (comum em hospedagens estáticas como Netlify). Exibindo resultados de demonstração.");
-        
-        const fallbackClips: GeneratedClip[] = [
-          {
-            id: 'demo-1',
-            title: 'O Segredo da Retenção',
-            duration: '0:28',
-            score: 98,
-            thumbnailUrl: `https://picsum.photos/seed/demo1/400/700`,
-            description: 'Gancho forte nos primeiros 3 segundos com transição dinâmica.'
-          },
-          {
-            id: 'demo-2',
-            title: 'Momento de Tensão',
-            duration: '0:45',
-            score: 92,
-            thumbnailUrl: `https://picsum.photos/seed/demo2/400/700`,
-            description: 'Corte focado na emoção com zoom in lento.'
-          },
-          {
-            id: 'demo-3',
-            title: 'Dica Prática',
-            duration: '0:59',
-            score: 88,
-            thumbnailUrl: `https://picsum.photos/seed/demo3/400/700`,
-            description: 'Tutorial rápido com legendas destacadas.'
-          }
-        ];
-
-        clearInterval(interval);
-        setProcessingStep(processingSteps.length - 1);
-        
-        setTimeout(() => {
-          setGeneratedClips(fallbackClips);
-          setIsProcessing(false);
-        }, 500);
-        return;
+      let errorMessage = "Ocorreu um erro desconhecido.";
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        errorMessage = "Erro de conexão (Failed to fetch). Verifique se:\n1. O servidor backend (VPS) está rodando.\n2. O CORS está configurado no backend (app.use(cors())).\n3. O vídeo não é muito grande e causou timeout.";
+      } else {
+        errorMessage = error.message;
       }
 
-      alert("Erro ao gerar cortes: " + error.message);
+      // Fallback for static hosting or missing API keys
+      alert(`Aviso: O servidor backend (VPS) não está respondendo corretamente. Exibindo resultados de demonstração.\n\nDetalhes do Erro: ${errorMessage}`);
+      
+      const fallbackClips: GeneratedClip[] = [
+        {
+          id: 'demo-1',
+          title: 'O Segredo da Retenção',
+          duration: '0:28',
+          score: 98,
+          thumbnailUrl: `https://picsum.photos/seed/demo1/400/700`,
+          description: 'Gancho forte nos primeiros 3 segundos com transição dinâmica.'
+        },
+        {
+          id: 'demo-2',
+          title: 'Momento de Tensão',
+          duration: '0:45',
+          score: 92,
+          thumbnailUrl: `https://picsum.photos/seed/demo2/400/700`,
+          description: 'Corte focado na emoção com zoom in lento.'
+        },
+        {
+          id: 'demo-3',
+          title: 'Dica Prática',
+          duration: '0:59',
+          score: 88,
+          thumbnailUrl: `https://picsum.photos/seed/demo3/400/700`,
+          description: 'Tutorial rápido com legendas destacadas.'
+        }
+      ];
+
       clearInterval(interval);
-      setIsProcessing(false);
+      setProcessingStep(processingSteps.length - 1);
+      
+      setTimeout(() => {
+        setGeneratedClips(fallbackClips);
+        setIsProcessing(false);
+        playSuccessSound();
+      }, 500);
     }
   };
 
+  const constraintsRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="h-full w-full flex flex-col pt-24 pb-8 px-8 overflow-y-auto">
+    <div 
+      ref={constraintsRef}
+      className="h-full w-full overflow-hidden relative bg-gray-50/50"
+      style={{
+        backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)',
+        backgroundSize: '24px 24px'
+      }}
+    >
       
       {headerActionsContainer && createPortal(
         <div className="relative flex items-center">
@@ -460,6 +506,29 @@ const themes = [
                 />
               </div>
 
+
+             {/* Video Count */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Quantidade de Vídeos</label>
+                <div className="flex gap-2">
+                  {['max', '3', '6', '12'].map((count) => (
+                    <button
+                      key={count}
+                      onClick={() => setVideoCount(count)}
+                      className={cn(
+                        "flex-1 py-2 rounded-xl text-[12px] font-bold transition-all border",
+                        videoCount === count
+                          ? "bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm"
+                          : "bg-gray-50 border-black/5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                      )}
+                    >
+                      {count === 'max' ? 'Max.' : count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+
               {/* Duration */}
               <div>
                 <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Duração Aproximada</label>
@@ -474,19 +543,33 @@ const themes = [
                 </select>
               </div>
 
-              {/* Theme */}
+            
+
+              {/* Video Speed */}
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Tema do Vídeo (Opcional)</label>
-                <select
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 border border-black/5 rounded-xl text-[12px] font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                >
-                  <option value="">Selecione um tema...</option>
-                  {themes.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest">Velocidade do Vídeo</label>
+                  
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="4"
+                  step="1"
+                  value={['1', '1.2', '1.5', '1.7', '2'].indexOf(videoSpeed) !== -1 ? ['1', '1.2', '1.5', '1.7', '2'].indexOf(videoSpeed) : 0}
+                  onChange={(e) => {
+                    const options = ['1', '1.2', '1.5', '1.7', '2'];
+                    setVideoSpeed(options[parseInt(e.target.value)]);
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                />
+                <div className="flex justify-between text-[10px] text-gray-400 font-medium mt-1.5 px-1">
+                  <span>1x</span>
+                  <span>1.2x</span>
+                  <span>1.5x</span>
+                  <span>1.7x</span>
+                  <span>2x</span>
+                </div>
               </div>
 
               {/* Aspect Ratio */}
@@ -532,9 +615,6 @@ const themes = [
                 </div>
               </div>
 
-             
-      
-              
             </div>
           </div>
           
@@ -544,92 +624,137 @@ const themes = [
               onClick={handleGenerate}
               className={cn(
                 "w-full py-3.5 rounded-xl font-bold text-[13px] text-white flex items-center justify-center gap-2 transition-all shadow-lg relative overflow-hidden",
-                !videoFile || isProcessing
+                !videoFile
                   ? "bg-gray-300 cursor-not-allowed shadow-none"
+                  : isProcessing
+                  ? "bg-gray-400 cursor-not-allowed shadow-none"
                   : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200"
               )}
             >
-              {isProcessing ? (
-                <>
-                  <RefreshCcw className="w-5 h-5 animate-spin" />
-                  Analisando Vídeo...
-                </>
-              ) : (
-                <>
-                  <Scissors className="w-5 h-5" />
-                  Gerar Cortes Mágicos
-                </>
+              {isProcessing && (
+                <div 
+                  className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out animate-shimmer-stripes"
+                  style={{ width: `${(processingStep / (processingSteps.length - 1)) * 100}%` }}
+                />
               )}
+              
+              <div className="relative z-10 flex items-center gap-2">
+                {isProcessing ? (
+                  <>
+                    <RefreshCcw className="w-5 h-5 animate-spin" />
+                    Gerando Corte...
+                  </>
+                ) : (
+                  <>
+                    <Scissors className="w-5 h-5" />
+                    Gerar Cortes Mágicos
+                  </>
+                )}
+              </div>
             </button>
           </div>
           </>
         )}
       </motion.div>
 
-      <div className="max-w-4xl mx-auto w-full space-y-8 pl-[340px]">
-        
-        {/* Main Panel - Results Area */}
-        <div className="space-y-6">
-          <AnimatePresence mode="wait">
-          {generatedClips.length > 0 && (
-  <motion.div 
-    key="results"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    className="bg-white rounded-2xl p-8 border border-black/5 shadow-sm"
-  >
-    <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-        <Scissors className="w-6 h-6 text-indigo-600" />
-        Cortes Gerados ({generatedClips.length})
-      </h2>
-      <div className="flex items-center gap-3">
-        <button 
-          onClick={handleGenerate}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors"
+      <motion.div 
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.1}
+        dragMomentum={false}
+        className="absolute w-[4000px] h-[4000px] flex items-center justify-center cursor-grab active:cursor-grabbing"
+        style={{ left: 'calc(50% - 2000px)', top: 'calc(50% - 2000px)', scale }}
+      >
+        <div 
+          className="max-w-4xl w-full space-y-8 pl-[340px] cursor-auto"
+          onPointerDown={(e) => e.stopPropagation()}
         >
-          <RefreshCcw className="w-4 h-4" />
-          Gerar Novamente
-        </button>
+          
+          {/* Main Panel - Results Area */}
+          <div className="space-y-6">
+            <AnimatePresence mode="wait">
+            {generatedClips.length > 0 && (
+    <motion.div 
+      key="results"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {generatedClips.map((clip) => (
+          <div key={clip.id} className="group relative transition-all">
+            <div className="aspect-[9/16] bg-black relative rounded-xl overflow-hidden shadow-sm">
+              {clip.url ? (
+                <video src={clip.url} controls className="w-full h-full object-contain" />
+              ) : (
+                <>
+                  <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <button className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+                      
+                    </button>
+                  </div>
+                </>
+              )}
+              <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 pointer-events-none z-10 shadow-sm">
+                <CheckCircle2 className="w-3 h-3" />
+                Score {clip.score}
+              </div>
+              
+              {/* Centered Download Button on Hover */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                {clip.url ? (
+                  <button 
+                    onClick={() => forceDownload(clip.url!, `corte_${clip.id}.mp4`)}
+                    title="Baixar" 
+                    className="pointer-events-auto w-12 h-12 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-transform hover:scale-110 shadow-lg border border-white/20"
+                  >
+                    <Download className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <button title="Baixar" className="pointer-events-auto w-12 h-12 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-transform hover:scale-110 shadow-lg border border-white/20">
+                    <Download className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="pt-3">
+              <div className="relative bg-white border border-gray-100 rounded-2xl rounded-tl-sm p-4 shadow-sm">
+                <h3 className="font-bold text-gray-800 text-sm mb-2 leading-tight">{clip.title}</h3>
+                {clip.description && (
+                  <p className="text-xs text-gray-500 leading-relaxed italic">"{clip.description}"</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
-    </div>
+    </motion.div>
+  )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {generatedClips.map((clip) => (
-        <div key={clip.id} className="group relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-md transition-all">
-          <div className="aspect-[9/16] bg-gray-200 relative">
-            <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <button className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors">
-                <Play className="w-5 h-5 ml-1" />
-              </button>
-            </div>
-            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md">
-              {clip.duration}
-            </div>
-            <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" />
-              Score {clip.score}
-            </div>
-          </div>
-          <div className="p-4">
-            <h3 className="font-bold text-gray-800 text-sm line-clamp-2 mb-2">{clip.title}</h3>
-            {clip.description && (
-              <p className="text-xs text-gray-500 line-clamp-2 mb-4">{clip.description}</p>
-            )}
-            <button className="w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors">
-              <Download className="w-4 h-4" />
-              Baixar Vídeo
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-)}
-          </AnimatePresence>
-        </div>
+      {/* Zoom Controls */}
+      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-xl border border-black/5">
+        <button 
+          onClick={() => setScale(s => Math.max(0.2, s - 0.1))}
+          className="p-2 hover:bg-black/5 rounded-xl transition-colors"
+          title="Diminuir Zoom"
+        >
+          <ZoomOut className="w-5 h-5 text-gray-600" />
+        </button>
+        <span className="text-[11px] font-bold text-gray-600 w-12 text-center font-mono">
+          {Math.round(scale * 100)}%
+        </span>
+        <button 
+          onClick={() => setScale(s => Math.min(3, s + 0.1))}
+          className="p-2 hover:bg-black/5 rounded-xl transition-colors"
+          title="Aumentar Zoom"
+        >
+          <ZoomIn className="w-5 h-5 text-gray-600" />
+        </button>
       </div>
     </div>
   );

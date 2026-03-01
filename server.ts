@@ -39,10 +39,9 @@ async function startServer() {
   });
 
   // Generate Reels Route
-  app.post("/api/generate-reels", upload.single("video"), async (req, res) => {
+  app.post("/api/generate-reels", async (req, res) => {
     try {
       const { duration, prompt, theme, interactiveSubtitles } = req.body;
-      const file = req.file; // We receive the file but we'll simulate processing for now
 
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {

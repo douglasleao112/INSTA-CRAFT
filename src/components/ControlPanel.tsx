@@ -1268,7 +1268,12 @@ Subtítulo do slide 6
           <div className="p-5 pt-0">
             <button
               onClick={generateSlides}
-              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2"
+              disabled={localText.trim() === '' || uploadedImages.length === 0}
+              className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                localText.trim() === '' || uploadedImages.length === 0
+                  ? 'bg-gray-300 text-white cursor-not-allowed'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-200'
+              }`}
             >
               <Plus className="w-4 h-4" />
               Gerar Carrossel
