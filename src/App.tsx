@@ -650,6 +650,9 @@ export default function App() {
               </div>
             </>
           )}
+          {activeTab === 'reels' && (
+            <div id="reels-header-actions" className="flex items-center gap-4"></div>
+          )}
         </div>
       </header>
 

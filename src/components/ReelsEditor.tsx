@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import { Upload, Video, Settings, Play, Scissors, Type, LayoutTemplate, CheckCircle2, Download, RefreshCcw, Maximize2, Minimize2, Pin, PinOff, ChevronDown, FileArchive } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -27,7 +28,12 @@ export function ReelsEditor() {
   const [isPinned, setIsPinned] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [headerActionsContainer, setHeaderActionsContainer] = useState<HTMLElement | null>(null);
   const dragControls = useDragControls();
+
+  useEffect(() => {
+    setHeaderActionsContainer(document.getElementById('reels-header-actions'));
+  }, []);
 
   const videoUrl = useMemo(() => videoFile ? URL.createObjectURL(videoFile) : '', [videoFile]);
 
@@ -257,6 +263,82 @@ const themes = [
   return (
     <div className="h-full w-full flex flex-col pt-24 pb-8 px-8 overflow-y-auto">
       
+      {headerActionsContainer && createPortal(
+        <div className="relative flex items-center">
+          <button 
+            className={cn(
+              "flex items-center gap-2 pl-6 pr-4 py-2.5 bg-indigo-600 text-white rounded-l-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all border-r border-white/20",
+              isDownloading || generatedClips.length === 0 ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
+            )}
+            onClick={downloadIndividual}
+            disabled={isDownloading || generatedClips.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            {isDownloading ? 'Gerando...' : 'Baixar'}
+          </button>
+          <button
+            className={cn(
+              "px-3 py-2.5 bg-indigo-600 text-white rounded-r-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all",
+              isDownloading || generatedClips.length === 0 ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
+            )}
+            onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+            disabled={isDownloading || generatedClips.length === 0}
+          >
+            <ChevronDown className={cn("w-4 h-4 transition-transform", showDownloadMenu && "rotate-180")} />
+          </button>
+
+          {/* Dropdown Menu */}
+          <AnimatePresence>
+            {showDownloadMenu && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowDownloadMenu(false)}
+                />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-black/5 overflow-hidden z-50"
+                >
+                  <button
+                    onClick={() => {
+                      setShowDownloadMenu(false);
+                      downloadIndividual();
+                    }}
+                    className="w-full px-4 py-4 text-left text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                      <Download className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span>Vídeos Individuais</span>
+                      <span className="text-[10px] text-gray-400 font-medium">Baixar cada corte separado</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDownloadMenu(false);
+                      downloadZip();
+                    }}
+                    className="w-full px-4 py-4 text-left text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-3 border-t border-gray-100"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                      <FileArchive className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span>Arquivo ZIP</span>
+                      <span className="text-[10px] text-gray-400 font-medium">Todos os cortes em um arquivo</span>
+                    </div>
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>,
+        headerActionsContainer
+      )}
+
       {/* Floating Control Panel */}
       <motion.div
         drag={!isPinned && !isMinimized}
@@ -510,56 +592,6 @@ const themes = [
           <RefreshCcw className="w-4 h-4" />
           Gerar Novamente
         </button>
-
-        <div className="relative flex items-center">
-          <button 
-            className={cn(
-              "flex items-center gap-2 pl-4 pr-3 py-2 bg-indigo-600 text-white rounded-l-lg font-bold text-sm shadow-sm transition-all border-r border-white/20",
-              isDownloading ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
-            )}
-            onClick={downloadIndividual}
-            disabled={isDownloading}
-          >
-            <Download className="w-4 h-4" />
-            {isDownloading ? 'Baixando...' : 'Baixar Todos'}
-          </button>
-          <button
-            className={cn(
-              "px-2 py-2 bg-indigo-600 text-white rounded-r-lg font-bold text-sm shadow-sm transition-all",
-              isDownloading ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
-            )}
-            onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-            disabled={isDownloading}
-          >
-            <ChevronDown className={cn("w-4 h-4 transition-transform", showDownloadMenu && "rotate-180")} />
-          </button>
-
-          {/* Dropdown Menu */}
-          {showDownloadMenu && (
-            <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-black/5 py-2 z-50">
-              <button
-                onClick={() => {
-                  setShowDownloadMenu(false);
-                  downloadIndividual();
-                }}
-                className="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <Download className="w-4 h-4 text-gray-400" />
-                Vídeos Individuais
-              </button>
-              <button
-                onClick={() => {
-                  setShowDownloadMenu(false);
-                  downloadZip();
-                }}
-                className="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <FileArchive className="w-4 h-4 text-gray-400" />
-                Arquivo ZIP
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </div>
 
