@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
-import { Upload, Video, Settings, Play, Scissors, Type, LayoutTemplate, CheckCircle2, Download, RefreshCcw, Maximize2, Minimize2, Pin, PinOff, ChevronDown, FileArchive, ZoomIn, ZoomOut } from 'lucide-react';
+import { Upload, Video, Settings, Play, Scissors, Type, LayoutTemplate, CheckCircle2, Download, RefreshCcw, Maximize2, Minimize2, Pin, PinOff, ChevronDown, FileArchive, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface GeneratedClip {
@@ -16,22 +16,63 @@ interface GeneratedClip {
 
 export function ReelsEditor() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [duration, setDuration] = useState('<30s');
-  const [prompt, setPrompt] = useState('');
-  const [videoCount, setVideoCount] = useState('max');
+  const [duration, setDuration] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('reels_duration') || '<30s';
+    return '<30s';
+  });
+  const [prompt, setPrompt] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('reels_prompt') || '';
+    return '';
+  });
+  const [videoCount, setVideoCount] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('reels_video_count') || 'max';
+    return 'max';
+  });
   const [videoSpeed, setVideoSpeed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('reels_video_speed') || '1';
     }
     return '1';
   });
-  const [aspectRatio, setAspectRatio] = useState('9:16');
+  const [aspectRatio, setAspectRatio] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('reels_aspect_ratio') || '9:16';
+    return '9:16';
+  });
+  const [interactiveSubtitles, setInteractiveSubtitles] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('reels_interactive_subtitles');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
 
   useEffect(() => {
     localStorage.setItem('reels_video_speed', videoSpeed);
-  }, [videoSpeed]);
+    localStorage.setItem('reels_duration', duration);
+    localStorage.setItem('reels_prompt', prompt);
+    localStorage.setItem('reels_video_count', videoCount);
+    localStorage.setItem('reels_aspect_ratio', aspectRatio);
+    localStorage.setItem('reels_interactive_subtitles', interactiveSubtitles.toString());
+  }, [videoSpeed, duration, prompt, videoCount, aspectRatio, interactiveSubtitles]);
+  const resetConfigs = () => {
+    const ok = confirm('Resetar configurações?');
+    if (!ok) return;
 
-  const [interactiveSubtitles, setInteractiveSubtitles] = useState(true);
+    localStorage.removeItem('reels_duration');
+    localStorage.removeItem('reels_prompt');
+    localStorage.removeItem('reels_video_count');
+    localStorage.removeItem('reels_video_speed');
+    localStorage.removeItem('reels_aspect_ratio');
+    localStorage.removeItem('reels_interactive_subtitles');
+
+    setDuration('<30s');
+    setPrompt('');
+    setVideoCount('max');
+    setVideoSpeed('1');
+    setAspectRatio('9:16');
+    setInteractiveSubtitles(true);
+  };
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
   const [generatedClips, setGeneratedClips] = useState<GeneratedClip[]>([]);
@@ -299,6 +340,15 @@ export function ReelsEditor() {
 
   const constraintsRef = useRef<HTMLDivElement>(null);
 
+  const handleWheel = (e: React.WheelEvent) => {
+    // impede a página de rolar enquanto dá zoom
+    e.preventDefault();
+
+    // scroll pra cima = zoom in | scroll pra baixo = zoom out
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    setScale(prev => Math.min(Math.max(prev * zoomFactor, 0.2), 3));
+  };
+
   return (
     <div 
       ref={constraintsRef}
@@ -307,6 +357,7 @@ export function ReelsEditor() {
         backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)',
         backgroundSize: '24px 24px'
       }}
+      onWheel={handleWheel}
     >
       
       {headerActionsContainer && createPortal(
@@ -417,6 +468,13 @@ export function ReelsEditor() {
           <div className={cn("flex items-center gap-1", isMinimized && "flex-col")}>
             {!isMinimized && (
               <>
+                <button
+                  onClick={resetConfigs}
+                  title="Resetar configurações"
+                  className="p-1.5 hover:bg-black/5 rounded-lg transition-colors text-gray-400 hover:text-indigo-600"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
                 <button 
                   onClick={() => setIsPinned(!isPinned)}
                   title={isPinned ? "Desafixar" : "Centralizar Painel"}

@@ -554,9 +554,7 @@ case 'full-bg':
 
       {/* Overlay do hover (tela toda) */}
       <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center z-10">
-        <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-          Duplo clique para trocar
-        </span>
+        
       </div>
 
      {/* Gradiente por cima da imagem (mais escuro embaixo) */}

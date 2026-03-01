@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ControlPanel } from './components/ControlPanel';
 import { Slide } from './components/Slide';
 import { CarouselConfig, SlideData } from './types';
-import { Download, RefreshCcw, ChevronDown, Layers } from 'lucide-react';
+import { Download, RefreshCcw, ChevronDown, Layers, ZoomIn, ZoomOut } from 'lucide-react';
 import { TextToolbar } from './components/TextToolbar';
 import { ReelsEditor } from './components/ReelsEditor';
 import { cn } from './lib/utils';
@@ -213,7 +213,7 @@ export default function App() {
   }, []);
 
   const resetConfigs = React.useCallback(() => {
-    const ok = confirm('Resetar configurações? Isso vai apagar o localStorage e voltar ao padrão.');
+    const ok = confirm('Resetar configurações?');
     if (!ok) return;
 
     localStorage.removeItem(STORAGE_KEY);
@@ -261,7 +261,7 @@ export default function App() {
     setZoom(newZoom);
   };
 
-  const generateSlides = () => {
+  const generateSlides = (text?: string) => {
     const savedPresets = localStorage.getItem('slide-presets');
     const presets = savedPresets ? JSON.parse(savedPresets).filter((p: any) => p !== null) : [];
 
@@ -275,6 +275,10 @@ export default function App() {
 
     const randomLayouts = allLayouts; // Agora permite full-bg em qualquer slide
     const batchSize = config.slideCount;
+
+    // Parse text if provided
+    const normalized = (text || '').replace(/\r\n/g, '\n');
+    const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
     // Prepare images pool to ensure random distribution without repetition until all are used
     let imagesPool: string[] = [];
@@ -596,10 +600,10 @@ export default function App() {
                 <button 
                   className={cn(
                     "flex items-center gap-2 pl-6 pr-4 py-2.5 bg-indigo-600 text-white rounded-l-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all border-r border-white/20",
-                    isDownloading ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
+                    (isDownloading || config.slides.length === 0) ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
                   )}
                   onClick={downloadIndividual}
-                  disabled={isDownloading}
+                  disabled={isDownloading || config.slides.length === 0}
                 >
                   <Download className="w-4 h-4" />
                   {isDownloading ? 'Gerando...' : 'Baixar'}
@@ -607,10 +611,10 @@ export default function App() {
                 <button
                   className={cn(
                     "px-3 py-2.5 bg-indigo-600 text-white rounded-r-full font-bold text-sm shadow-lg shadow-indigo-200 transition-all",
-                    isDownloading ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
+                    (isDownloading || config.slides.length === 0) ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-700 active:scale-95"
                   )}
                   onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                  disabled={isDownloading}
+                  disabled={isDownloading || config.slides.length === 0}
                 >
                   <ChevronDown className={cn("w-4 h-4 transition-transform", showDownloadMenu && "rotate-180")} />
                 </button>
@@ -744,6 +748,27 @@ export default function App() {
               ))}
             </motion.div>
           </main>
+
+          {/* Zoom Controls */}
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-xl border border-black/5">
+            <button 
+              onClick={() => setZoom(z => Math.max(0.2, z - 0.1))}
+              className="p-2 hover:bg-black/5 rounded-xl transition-colors"
+              title="Diminuir Zoom"
+            >
+              <ZoomOut className="w-5 h-5 text-gray-600" />
+            </button>
+            <span className="text-[11px] font-bold text-gray-600 w-12 text-center font-mono">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button 
+              onClick={() => setZoom(z => Math.min(3, z + 0.1))}
+              className="p-2 hover:bg-black/5 rounded-xl transition-colors"
+              title="Aumentar Zoom"
+            >
+              <ZoomIn className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
         </>
       ) : (
         <ReelsEditor />
