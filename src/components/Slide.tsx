@@ -664,9 +664,7 @@ onDoubleClick={(e) => {
     )}
 
     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center" style={imgWrapStyle}>
-      <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-        Duplo clique para trocar
-      </span>
+      
     </div>
   </div>
 </motion.div>
@@ -721,9 +719,7 @@ onDoubleClick={(e) => {
 
     {/* overlay opcional */}
     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center" style={imgWrapStyle}>
-      <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-        Duplo clique para trocar
-      </span>
+     
     </div>
   </div>
 </motion.div>
@@ -774,9 +770,7 @@ onDoubleClick={(e) => {
     )}
 
     <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center" style={imgWrapStyle}>
-      <span className="text-white text-xs font-bold px-3 py-1 rounded-full bg-black/40">
-        Duplo clique para trocar
-      </span>
+     
     </div>
   </div>
 </motion.div>
