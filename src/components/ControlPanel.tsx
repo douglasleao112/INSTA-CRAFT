@@ -44,7 +44,7 @@ interface Message {
 interface ControlPanelProps {
   config: CarouselConfig;
   updateConfig: (updates: any) => void;
-  generateSlides: (text?: string) => void;
+  generateSlides: () => void;
 
   // antes: onClearImages?: () => void;
   onResetConfig?: () => void;
@@ -147,7 +147,7 @@ useEffect(() => {
   
   const handleResetConfig = () => {
   // opcional: confirmação
-  const ok = window.confirm("Resetar configurações? Isso vai limpar o histórico.");
+  const ok = window.confirm("Resetar configurações?");
   if (!ok) return;
 
   // limpa tudo (se preferir, use removeItem nas chaves específicas)
@@ -328,6 +328,21 @@ const handleBrandingChange = (key: keyof Branding, value: any) => {
 
   const handleTextContentChange = (text: string) => {
     setLocalText(text);
+    const normalized = text.replace(/\r\n/g, '\n');
+    // Split by double newlines or single newlines to get potential headlines/subheadlines
+    // We'll treat each non-empty line as a piece of content
+    const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    const newSlides = [...config.slides];
+    for (let i = 0; i < config.slideCount; i++) {
+      if (!newSlides[i]) {
+        newSlides[i] = { id: crypto.randomUUID(), headline: '', subheadline: '', layout: 'full-bg' };
+      }
+      // Logic: 2 lines per slide
+      newSlides[i].headline = lines[i * 2] || '';
+      newSlides[i].subheadline = lines[i * 2 + 1] || '';
+    }
+    updateConfig({ slides: newSlides });
   };
 
   const tabs = [
@@ -1252,7 +1267,7 @@ Subtítulo do slide 6
           {/* Persistent Footer Action */}
           <div className="p-5 pt-0">
             <button
-              onClick={() => generateSlides(localText)}
+              onClick={generateSlides}
               disabled={localText.trim() === '' || uploadedImages.length === 0}
               className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
                 localText.trim() === '' || uploadedImages.length === 0

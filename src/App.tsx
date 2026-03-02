@@ -261,7 +261,7 @@ export default function App() {
     setZoom(newZoom);
   };
 
-  const generateSlides = (text?: string) => {
+  const generateSlides = () => {
     const savedPresets = localStorage.getItem('slide-presets');
     const presets = savedPresets ? JSON.parse(savedPresets).filter((p: any) => p !== null) : [];
 
@@ -275,10 +275,6 @@ export default function App() {
 
     const randomLayouts = allLayouts; // Agora permite full-bg em qualquer slide
     const batchSize = config.slideCount;
-
-    // Parse text if provided
-    const normalized = (text || '').replace(/\r\n/g, '\n');
-    const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
     // Prepare images pool to ensure random distribution without repetition until all are used
     let imagesPool: string[] = [];
