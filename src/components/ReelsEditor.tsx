@@ -97,11 +97,8 @@ export function ReelsEditor() {
   const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
   const handleWheel = (e: React.WheelEvent) => {
-    const isInsideSidebar = (e.target as HTMLElement).closest('.sidebar-panel');
-    if (isInsideSidebar) {
-      const sidebar = isInsideSidebar as HTMLElement;
-      // Se a sidebar tiver scroll, permitimos o scroll normal a menos que Ctrl esteja pressionado
-      if (sidebar.scrollHeight > sidebar.clientHeight && !e.ctrlKey) return;
+    if ((e.target as HTMLElement).closest('.sidebar-panel')) {
+      return;
     }
 
     e.preventDefault();
