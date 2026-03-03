@@ -81,9 +81,12 @@ export function ReelsEditor() {
   const [isPinned, setIsPinned] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [scale, setScale] = useState(1);
+  const [workspacePos, setWorkspacePos] = useState({ x: 400, y: 150 });
+  const [scale, setScale] = useState(0.8);
   const [headerActionsContainer, setHeaderActionsContainer] = useState<HTMLElement | null>(null);
   const dragControls = useDragControls();
+
+  const isPanelLocked = isProcessing || isDownloading;
 
   useEffect(() => {
     setHeaderActionsContainer(document.getElementById('reels-header-actions'));
@@ -91,9 +94,45 @@ export function ReelsEditor() {
 
   const videoUrl = useMemo(() => videoFile ? URL.createObjectURL(videoFile) : '', [videoFile]);
 
+  const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const isInsideSidebar = (e.target as HTMLElement).closest('.sidebar-panel');
+    if (isInsideSidebar) {
+      const sidebar = isInsideSidebar as HTMLElement;
+      // Se a sidebar tiver scroll, permitimos o scroll normal a menos que Ctrl esteja pressionado
+      if (sidebar.scrollHeight > sidebar.clientHeight && !e.ctrlKey) return;
+    }
+
+    e.preventDefault();
+    
+    const container = constraintsRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const newScale = clamp(scale * zoomFactor, 0.1, 4);
+    const ratio = newScale / scale;
+
+    setWorkspacePos(prev => ({
+      x: mouseX - (mouseX - prev.x) * ratio,
+      y: mouseY - (mouseY - prev.y) * ratio,
+    }));
+
+    setScale(newScale);
+  };
+
   const forceDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -104,8 +143,16 @@ export function ReelsEditor() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Error downloading file:', error);
-      window.open(url, '_blank');
+      // Fallback silencioso: tenta abrir em uma nova aba ou forçar o download direto pelo link
+      // Isso acontece geralmente por bloqueio de CORS ao tentar fazer o fetch do vídeo
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -198,9 +245,9 @@ export function ReelsEditor() {
 
   const processingSteps = [
     "Enviando vídeo para o servidor...",
-    "Transcrevendo áudio e analisando contexto...",
+    "Transcrevendo áudio...",
     "Identificando melhores momentos...",
-    "Aplicando cortes e legendas dinâmicas...",
+    "Analisando contexto...",
     "Finalizando renderização..."
   ];
 
@@ -267,16 +314,43 @@ export function ReelsEditor() {
 
       const data = await response.json();
       
-      // Map the backend response to our GeneratedClip interface
-      const newClips: GeneratedClip[] = data.clips.map((clip: any, index: number) => ({
-        id: clip.id || String(index + 1),
-        title: clip.title || `Corte Inteligente ${index + 1}`,
-        duration: clip.duration || '0:15',
-        score: clip.score || Math.floor(Math.random() * 20) + 80,
-        thumbnailUrl: clip.url || `https://picsum.photos/seed/${Math.random()}/400/700`, // Use the actual video URL if available
-        url: clip.url, // Store the actual video URL
-        description: clip.description || 'Corte gerado automaticamente pela IA.'
-      }));
+      let newClips: GeneratedClip[] = [];
+
+      if (data.clips && Array.isArray(data.clips) && data.clips.length > 0) {
+        // Map the backend response to our GeneratedClip interface
+        newClips = data.clips.map((clip: any, index: number) => {
+          let clipUrl = clip.url || clip.videoUrl || clip.video_url || clip.file;
+          if (clipUrl && clipUrl.startsWith('/')) {
+            clipUrl = `https://api-videos-api-videos.vexhyt.easypanel.host${clipUrl}`;
+          }
+          return {
+            id: clip.id || String(index + 1),
+            title: clip.title || `Corte Inteligente ${index + 1}`,
+            duration: clip.duration || '0:15',
+            score: clip.score || Math.floor(Math.random() * 20) + 80,
+            thumbnailUrl: clipUrl || `https://picsum.photos/seed/${Math.random()}/400/700`,
+            url: clipUrl,
+            description: clip.description || 'Corte gerado automaticamente pela IA.'
+          };
+        });
+      } else if (data.url || data.videoUrl || data.video_url || data.file || data.downloadUrl || data.video) {
+        // Handle single video response
+        let videoUrl = data.url || data.videoUrl || data.video_url || data.file || data.downloadUrl || data.video;
+        if (videoUrl && videoUrl.startsWith('/')) {
+          videoUrl = `https://api-videos-api-videos.vexhyt.easypanel.host${videoUrl}`;
+        }
+        newClips = [{
+          id: '1',
+          title: 'Corte Inteligente 1',
+          duration: '0:15',
+          score: 95,
+          thumbnailUrl: videoUrl,
+          url: videoUrl,
+          description: 'Corte gerado automaticamente pela IA.'
+        }];
+      } else {
+        throw new Error("O servidor não retornou nenhum vídeo válido.");
+      }
 
       clearInterval(interval);
       setProcessingStep(processingSteps.length - 1); // Final step
@@ -298,7 +372,7 @@ export function ReelsEditor() {
       }
 
       // Fallback for static hosting or missing API keys
-      alert(`Aviso: O servidor backend (VPS) não está respondendo corretamente. Exibindo resultados de demonstração.\n\nDetalhes do Erro: ${errorMessage}`);
+      console.warn(`Aviso: O servidor backend (VPS) não está respondendo corretamente. Exibindo resultados de demonstração.\n\nDetalhes do Erro: ${errorMessage}`);
       
       const fallbackClips: GeneratedClip[] = [
         {
@@ -307,6 +381,7 @@ export function ReelsEditor() {
           duration: '0:28',
           score: 98,
           thumbnailUrl: `https://picsum.photos/seed/demo1/400/700`,
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
           description: 'Gancho forte nos primeiros 3 segundos com transição dinâmica.'
         },
         {
@@ -315,6 +390,7 @@ export function ReelsEditor() {
           duration: '0:45',
           score: 92,
           thumbnailUrl: `https://picsum.photos/seed/demo2/400/700`,
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
           description: 'Corte focado na emoção com zoom in lento.'
         },
         {
@@ -323,6 +399,7 @@ export function ReelsEditor() {
           duration: '0:59',
           score: 88,
           thumbnailUrl: `https://picsum.photos/seed/demo3/400/700`,
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
           description: 'Tutorial rápido com legendas destacadas.'
         }
       ];
@@ -340,24 +417,41 @@ export function ReelsEditor() {
 
   const constraintsRef = useRef<HTMLDivElement>(null);
 
-  const handleWheel = (e: React.WheelEvent) => {
-    // impede a página de rolar enquanto dá zoom
-    e.preventDefault();
-
-    // scroll pra cima = zoom in | scroll pra baixo = zoom out
-    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    setScale(prev => Math.min(Math.max(prev * zoomFactor, 0.2), 3));
-  };
-
   return (
     <div 
       ref={constraintsRef}
-      className="h-full w-full overflow-hidden relative bg-gray-50/50"
+      className="h-full w-full overflow-hidden relative bg-gray-50/50 cursor-crosshair active:cursor-grabbing"
+      onWheel={handleWheel}
+      onPointerDown={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.sidebar-panel') || target.closest('button') || target.closest('video')) return;
+        
+        e.preventDefault();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const initialPos = { ...workspacePos };
+
+        const onMove = (moveEvent: PointerEvent) => {
+          const dx = moveEvent.clientX - startX;
+          const dy = moveEvent.clientY - startY;
+          setWorkspacePos({
+            x: initialPos.x + dx,
+            y: initialPos.y + dy,
+          });
+        };
+
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        };
+
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      }}
       style={{
         backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)',
         backgroundSize: '24px 24px'
       }}
-      onWheel={handleWheel}
     >
       
       {headerActionsContainer && createPortal(
@@ -437,8 +531,8 @@ export function ReelsEditor() {
       )}
 
       {/* Floating Control Panel */}
-      <motion.div
-        drag={!isPinned && !isMinimized}
+<motion.div
+        drag={!isPinned && !isMinimized && !isPanelLocked}
         dragControls={dragControls}
         dragListener={false}
         dragMomentum={false}
@@ -447,11 +541,11 @@ export function ReelsEditor() {
         animate={isMinimized ? "minimized" : (isPinned ? "pinned" : "unpinned")}
         variants={panelVariants}
         transition={{ type: 'spring', damping: 30, stiffness: 250 }}
-        className="fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden flex flex-col"
+        className="sidebar-panel fixed z-50 bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div 
-          onPointerDown={(e) => !isPinned && !isMinimized && dragControls.start(e)}
+          onPointerDown={(e) => !isPinned && !isMinimized && !isPanelLocked && dragControls.start(e)}
           className={cn(
           "flex items-center justify-between p-4 border-b border-black/5 bg-white/50",
           !isPinned ? "cursor-grab active:cursor-grabbing" : "cursor-default",
@@ -500,295 +594,349 @@ export function ReelsEditor() {
           </div>
         </div>
 
-        {!isMinimized && (
-          <>
-            <div className="p-5 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-              <div className={cn(
-                "space-y-6",
-                isPinned && "max-w-[380px] mx-auto w-full px-1"
-              )}>
-               {/* Upload + Legendas */}
-<div>
-  {!videoFile ? (
-    <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-        <Upload className="w-6 h-6 text-gray-400 mb-2" />
-        <p className="mb-1 text-[11px] text-gray-500 font-bold text-center px-2">Clique ou arraste um vídeo</p>
-        <p className="text-[9px] text-gray-400">MP4, MOV ou AVI</p>
-      </div>
-      <input type="file" className="hidden" accept="video/*" onChange={handleFileUpload} />
-    </label>
-  ) : (
-    <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
-      <video 
-        src={videoUrl} 
-        controls 
-        className="w-full h-full object-contain"
-      />
-      <button 
-        onClick={() => {
-          setVideoFile(null);
-          setGeneratedClips([]);
-        }}
-        className="absolute top-2 right-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-md transition-all"
+
+
+
+{!isMinimized && (
+  <>
+    <div className="relative flex-1 min-h-0">
+      {/* CONTEÚDO DO PAINEL */}
+      <div
+        className={cn(
+          "p-5 h-full overflow-y-auto custom-scrollbar",
+          isPanelLocked && "pointer-events-none select-none opacity-60"
+        )}
       >
-        Trocar
-      </button>
-    </div>
-  )}
-  {/* Legendas Dinâmicas */}
-  <div className="mt-2 ml-2">
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={interactiveSubtitles}
-        onChange={(e) => setInteractiveSubtitles(e.target.checked)}
-        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-      />
-      <span className="text-[12px] font-semibold text-gray-700">
-        Legendas Dinâmicas
-      </span>
-    </label>
-  </div>
-</div>
-
-
-                {/* Prompt */}
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Prompt de Edição (Opcional)</label>
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={placeholderText}
-                  className="w-full h-16 p-3 bg-gray-50 border border-black/5 rounded-xl resize-none text-[12px] font-mono focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent outline-none transition-all custom-scrollbar"
+        <div
+          className={cn(
+            "space-y-6",
+            isPinned && "max-w-[380px] mx-auto w-full px-1"
+          )}
+        >
+          {/* Upload + Legendas */}
+          <div>
+            {!videoFile ? (
+              <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                  <p className="mb-1 text-[11px] text-gray-500 font-bold text-center px-2">
+                    Clique ou arraste um vídeo
+                  </p>
+                  <p className="text-[9px] text-gray-400">MP4, MOV ou AVI</p>
+                </div>
+                <input type="file" className="hidden" accept="video/*" onChange={handleFileUpload} />
+              </label>
+            ) : (
+              <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
+                <video
+                  src={videoUrl}
+                  controls
+                  className="w-full h-full object-contain"
                 />
-              </div>
-
-
-             {/* Video Count */}
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Quantidade de Vídeos</label>
-                <div className="flex gap-2">
-                  {['max', '3', '6', '12'].map((count) => (
-                    <button
-                      key={count}
-                      onClick={() => setVideoCount(count)}
-                      className={cn(
-                        "flex-1 py-2 rounded-xl text-[12px] font-bold transition-all border",
-                        videoCount === count
-                          ? "bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm"
-                          : "bg-gray-50 border-black/5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                      )}
-                    >
-                      {count === 'max' ? 'Max.' : count}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-
-              {/* Duration */}
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Duração Aproximada</label>
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 border border-black/5 rounded-xl text-[12px] font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                >
-                  {['<30s', '30s~59s', '60s~89s', '90s~3m', '3m~5m', '5m~10m', '10m~15m'].map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-
-            
-
-              {/* Video Speed */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest">Velocidade do Vídeo</label>
-                  
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="4"
-                  step="1"
-                  value={['1', '1.2', '1.5', '1.7', '2'].indexOf(videoSpeed) !== -1 ? ['1', '1.2', '1.5', '1.7', '2'].indexOf(videoSpeed) : 0}
-                  onChange={(e) => {
-                    const options = ['1', '1.2', '1.5', '1.7', '2'];
-                    setVideoSpeed(options[parseInt(e.target.value)]);
+                <button
+                  onClick={() => {
+                    setVideoFile(null);
+                    setGeneratedClips([]);
                   }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="absolute top-2 right-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-md transition-all"
+                >
+                  Trocar
+                </button>
+              </div>
+            )}
+
+            {/* Legendas Dinâmicas */}
+            <div className="mt-2 ml-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={interactiveSubtitles}
+                  onChange={(e) => setInteractiveSubtitles(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400 font-medium mt-1.5 px-1">
-                  <span>1x</span>
-                  <span>1.2x</span>
-                  <span>1.5x</span>
-                  <span>1.7x</span>
-                  <span>2x</span>
-                </div>
-              </div>
-
-              {/* Aspect Ratio */}
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Dimensão</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { id: '9:16', label: '9:16', icon: (
-                      <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
-                        <rect x="36.25" y="10" width="67.5" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8"/>
-                      </svg>
-                    )},
-                    { id: '1:1', label: '1:1', icon: (
-                      <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
-                        <rect x="10" y="10" width="120" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8"/>
-                      </svg>
-                    )},
-                    { id: '16:9', label: '16:9', icon: (
-                      <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
-                        <rect x="10" y="36.25" width="120" height="67.5" rx="12" fill="none" stroke="currentColor" strokeWidth="8"/>
-                      </svg>
-                    )},
-                    { id: '4:5', label: '4:5', icon: (
-                      <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
-                        <rect x="22" y="10" width="96" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8"/>
-                      </svg>
-                    )}
-                  ].map((ratio) => (
-                    <button
-                      key={ratio.id}
-                      onClick={() => setAspectRatio(ratio.id)}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                        aspectRatio === ratio.id
-                          ? "bg-indigo-50 border-indigo-500 text-indigo-600"
-                          : "bg-gray-50 border-black/5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                      )}
-                    >
-                      {ratio.icon}
-                      <span className="text-[10px] font-bold">{ratio.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+                <span className="text-[12px] font-semibold text-gray-700">
+                  Legendas Dinâmicas
+                </span>
+              </label>
             </div>
           </div>
-          
-          <div className="p-5 border-t border-black/5 bg-white/50 backdrop-blur-md">
-            <button
-              disabled={!videoFile || isProcessing}
-              onClick={handleGenerate}
-              className={cn(
-                "w-full py-3.5 rounded-xl font-bold text-[13px] text-white flex items-center justify-center gap-2 transition-all shadow-lg relative overflow-hidden",
-                !videoFile
-                  ? "bg-gray-300 cursor-not-allowed shadow-none"
-                  : isProcessing
-                  ? "bg-gray-400 cursor-not-allowed shadow-none"
-                  : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200"
-              )}
-            >
-              {isProcessing && (
-                <div 
-                  className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out animate-shimmer-stripes"
-                  style={{ width: `${(processingStep / (processingSteps.length - 1)) * 100}%` }}
-                />
-              )}
-              
-              <div className="relative z-10 flex items-center gap-2">
-                {isProcessing ? (
-                  <>
-                    <RefreshCcw className="w-5 h-5 animate-spin" />
-                    Gerando Corte...
-                  </>
-                ) : (
-                  <>
-                    <Scissors className="w-5 h-5" />
-                    Gerar Cortes Mágicos
-                  </>
-                )}
-              </div>
-            </button>
+
+          {/* Prompt */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Prompt de Edição (Opcional)
+            </label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder={placeholderText}
+              className="w-full h-16 p-3 bg-gray-50 border border-black/5 rounded-xl resize-none text-[12px] font-mono focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent outline-none transition-all custom-scrollbar"
+            />
           </div>
-          </>
+
+          {/* Video Count */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Quantidade de Vídeos
+            </label>
+            <div className="flex gap-2">
+              {['max', '3', '6', '12'].map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setVideoCount(count)}
+                  className={cn(
+                    "flex-1 py-2 rounded-xl text-[12px] font-bold transition-all border",
+                    videoCount === count
+                      ? "bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm"
+                      : "bg-gray-50 border-black/5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  )}
+                >
+                  {count === 'max' ? 'Max.' : count}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Duração Aproximada
+            </label>
+            <select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              className="w-full p-2.5 bg-gray-50 border border-black/5 rounded-xl text-[12px] font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+            >
+              {['<30s', '30s~59s', '60s~89s', '90s~3m', '3m~5m', '5m~10m', '10m~15m'].map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Video Speed */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                Velocidade do Vídeo
+              </label>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="4"
+              step="1"
+              value={
+                ['1', '1.2', '1.5', '1.7', '2'].indexOf(videoSpeed) !== -1
+                  ? ['1', '1.2', '1.5', '1.7', '2'].indexOf(videoSpeed)
+                  : 0
+              }
+              onChange={(e) => {
+                const options = ['1', '1.2', '1.5', '1.7', '2'];
+                setVideoSpeed(options[parseInt(e.target.value)]);
+              }}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+            />
+            <div className="flex justify-between text-[10px] text-gray-400 font-medium mt-1.5 px-1">
+              <span>1x</span>
+              <span>1.2x</span>
+              <span>1.5x</span>
+              <span>1.7x</span>
+              <span>2x</span>
+            </div>
+          </div>
+
+          {/* Aspect Ratio */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+              Dimensão
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { id: '9:16', label: '9:16', icon: (
+                  <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
+                    <rect x="36.25" y="10" width="67.5" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8" />
+                  </svg>
+                )},
+                { id: '1:1', label: '1:1', icon: (
+                  <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
+                    <rect x="10" y="10" width="120" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8" />
+                  </svg>
+                )},
+                { id: '16:9', label: '16:9', icon: (
+                  <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
+                    <rect x="10" y="36.25" width="120" height="67.5" rx="12" fill="none" stroke="currentColor" strokeWidth="8" />
+                  </svg>
+                )},
+                { id: '4:5', label: '4:5', icon: (
+                  <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
+                    <rect x="22" y="10" width="96" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8" />
+                  </svg>
+                )},
+              ].map((ratio) => (
+                <button
+                  key={ratio.id}
+                  onClick={() => setAspectRatio(ratio.id)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                    aspectRatio === ratio.id
+                      ? "bg-indigo-50 border-indigo-500 text-indigo-600"
+                      : "bg-gray-50 border-black/5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  )}
+                >
+                  {ratio.icon}
+                  <span className="text-[10px] font-bold">{ratio.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* FOOTER / CTA */}
+    <div
+      className={cn(
+        "p-5 border-t border-black/5 bg-white/50 backdrop-blur-md",
+        isPanelLocked && "pointer-events-none select-none opacity-60"
+      )}
+    >
+      <button
+        disabled={!videoFile || isProcessing}
+        onClick={handleGenerate}
+        className={cn(
+          "w-full py-3.5 rounded-xl font-bold text-[13px] text-white flex items-center justify-center gap-2 transition-all shadow-lg relative overflow-hidden",
+          !videoFile
+            ? "bg-gray-300 cursor-not-allowed shadow-none"
+            : isProcessing
+            ? "bg-gray-400 cursor-not-allowed shadow-none"
+            : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200"
         )}
+      >
+        {isProcessing && (
+          <div
+            className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out animate-shimmer-stripes"
+            style={{ width: `${(processingStep / (processingSteps.length - 1)) * 100}%` }}
+          />
+        )}
+
+        <div className="relative z-10 flex items-center gap-2">
+          {isProcessing ? (
+            <>
+              <RefreshCcw className="w-5 h-5 animate-spin" />
+              Gerando Corte...
+            </>
+          ) : (
+            <>
+              <Scissors className="w-5 h-5" />
+              Gerar Cortes Mágicos
+            </>
+          )}
+        </div>
+      </button>
+    </div>
+  </>
+)}
+
+
+
+
       </motion.div>
 
       <motion.div 
-        drag
-        dragConstraints={constraintsRef}
-        dragElastic={0.1}
-        dragMomentum={false}
-        className="absolute w-[4000px] h-[4000px] flex items-center justify-center cursor-grab active:cursor-grabbing"
-        style={{ left: 'calc(50% - 2000px)', top: 'calc(50% - 2000px)', scale }}
+        className="absolute min-w-max p-20"
+        animate={{ 
+          x: workspacePos.x, 
+          y: workspacePos.y, 
+          scale 
+        }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 400, 
+          damping: 40, 
+          mass: 0.5,
+          restDelta: 0.001
+        }}
+        style={{ 
+          left: 0,
+          top: 0,
+          transformOrigin: '0 0'
+        }}
       >
         <div 
-          className="max-w-4xl w-full space-y-8 pl-[340px] cursor-auto"
+          className="w-full max-w-6xl space-y-12 cursor-auto"
           onPointerDown={(e) => e.stopPropagation()}
         >
           
           {/* Main Panel - Results Area */}
           <div className="space-y-6">
             <AnimatePresence mode="wait">
-            {generatedClips.length > 0 && (
-    <motion.div 
-      key="results"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {generatedClips.map((clip) => (
-          <div key={clip.id} className="group relative transition-all">
-            <div className="aspect-[9/16] bg-black relative rounded-xl overflow-hidden shadow-sm">
-              {clip.url ? (
-                <video src={clip.url} controls className="w-full h-full object-contain" />
-              ) : (
-                <>
-                  <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    <button className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors">
-                      
-                    </button>
+              {generatedClips.length > 0 ? (
+                <motion.div 
+                  key="results"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {generatedClips.map((clip) => (
+                      <div key={clip.id} className="group relative transition-all">
+                        <div className="aspect-[9/16] bg-black relative rounded-xl overflow-hidden shadow-sm">
+                          {clip.url ? (
+                            <video src={clip.url} controls className="w-full h-full object-contain" />
+                          ) : (
+                            <>
+                              <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <button className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+                                  
+                                </button>
+                              </div>
+                            </>
+                          )}
+                          <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 pointer-events-none z-10 shadow-sm">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Score {clip.score}
+                          </div>
+                          
+                          {/* Centered Download Button on Hover */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                            {clip.url ? (
+                              <button 
+                                onClick={() => forceDownload(clip.url!, `corte_${clip.id}.mp4`)}
+                                title="Baixar" 
+                                className="pointer-events-auto w-12 h-12 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-transform hover:scale-110 shadow-lg border border-white/20"
+                              >
+                                <Download className="w-5 h-5" />
+                              </button>
+                            ) : (
+                              <button title="Baixar" className="pointer-events-auto w-12 h-12 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-transform hover:scale-110 shadow-lg border border-white/20">
+                                <Download className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="pt-3">
+                          <div className="relative bg-white border border-gray-100 rounded-2xl rounded-tl-sm p-4 shadow-sm">
+                            <h3 className="font-bold text-gray-800 text-sm mb-2 leading-tight">{clip.title}</h3>
+                            {clip.description && (
+                              <p className="text-xs text-gray-500 leading-relaxed italic">"{clip.description}"</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center py-32 text-center"
+                >
+                  
+                </motion.div>
               )}
-              <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 pointer-events-none z-10 shadow-sm">
-                <CheckCircle2 className="w-3 h-3" />
-                Score {clip.score}
-              </div>
-              
-              {/* Centered Download Button on Hover */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                {clip.url ? (
-                  <button 
-                    onClick={() => forceDownload(clip.url!, `corte_${clip.id}.mp4`)}
-                    title="Baixar" 
-                    className="pointer-events-auto w-12 h-12 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-transform hover:scale-110 shadow-lg border border-white/20"
-                  >
-                    <Download className="w-5 h-5" />
-                  </button>
-                ) : (
-                  <button title="Baixar" className="pointer-events-auto w-12 h-12 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-transform hover:scale-110 shadow-lg border border-white/20">
-                    <Download className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="pt-3">
-              <div className="relative bg-white border border-gray-100 rounded-2xl rounded-tl-sm p-4 shadow-sm">
-                <h3 className="font-bold text-gray-800 text-sm mb-2 leading-tight">{clip.title}</h3>
-                {clip.description && (
-                  <p className="text-xs text-gray-500 leading-relaxed italic">"{clip.description}"</p>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  )}
             </AnimatePresence>
           </div>
         </div>
@@ -797,7 +945,7 @@ export function ReelsEditor() {
       {/* Zoom Controls */}
       <div className="fixed bottom-6 right-6 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-xl border border-black/5">
         <button 
-          onClick={() => setScale(s => Math.max(0.2, s - 0.1))}
+          onClick={() => setScale(s => Math.max(0.1, s - 0.1))}
           className="p-2 hover:bg-black/5 rounded-xl transition-colors"
           title="Diminuir Zoom"
         >
@@ -807,7 +955,7 @@ export function ReelsEditor() {
           {Math.round(scale * 100)}%
         </span>
         <button 
-          onClick={() => setScale(s => Math.min(3, s + 0.1))}
+          onClick={() => setScale(s => Math.min(4, s + 0.1))}
           className="p-2 hover:bg-black/5 rounded-xl transition-colors"
           title="Aumentar Zoom"
         >

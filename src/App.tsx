@@ -157,6 +157,7 @@ export default function App() {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'carousel' | 'reels'>('carousel');
+  const [draftText, setDraftText] = useState<string>('');
 
   const [presets, setPresets] = useState<(SlideData | null)[]>(() => {
     const saved = localStorage.getItem('slide-presets');
@@ -261,6 +262,12 @@ export default function App() {
     setZoom(newZoom);
   };
 
+
+
+
+
+
+
   const generateSlides = () => {
     const savedPresets = localStorage.getItem('slide-presets');
     const presets = savedPresets ? JSON.parse(savedPresets).filter((p: any) => p !== null) : [];
@@ -275,6 +282,12 @@ export default function App() {
 
     const randomLayouts = allLayouts; // Agora permite full-bg em qualquer slide
     const batchSize = config.slideCount;
+
+    const normalized = (draftText || '').replace(/\r\n/g, '\n').trim();
+const lines = normalized
+  .split('\n')
+  .map(l => l.trim())
+  .filter(Boolean);
 
     // Prepare images pool to ensure random distribution without repetition until all are used
     let imagesPool: string[] = [];
@@ -358,8 +371,8 @@ export default function App() {
 
       return {
         id: existingSlide?.id || crypto.randomUUID(),
-        headline: existingSlide?.headline || `Título do Slide ${i + 1}`,
-        subheadline: existingSlide?.subheadline || `Subtítulo explicativo do slide ${i + 1}`,
+        headline: lines[i * 2] || existingSlide?.headline || `Título do Slide ${i + 1}`,
+subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo explicativo do slide ${i + 1}`,
         layout,
         image,
         headlinePos,
@@ -371,6 +384,15 @@ export default function App() {
 
     updateConfig({ slides: newBatch });
   };
+
+
+
+
+
+
+
+
+
 
   const downloadAll = async () => {
     if (config.slides.length === 0) return;
@@ -650,125 +672,129 @@ export default function App() {
               </div>
             </>
           )}
-          {activeTab === 'reels' && (
-            <div id="reels-header-actions" className="flex items-center gap-4"></div>
-          )}
+          <div 
+            id="reels-header-actions" 
+            className="items-center gap-4"
+            style={{ display: activeTab === 'reels' ? 'flex' : 'none' }}
+          ></div>
         </div>
       </header>
 
-      {activeTab === 'carousel' ? (
-        <>
-          {/* Floating Control Panel */}
-          <ControlPanel 
-            config={config} 
-            updateConfig={updateConfig} 
-            generateSlides={generateSlides} 
-            onResetConfig={resetConfigs}
-            uploadedImages={uploadedImages}
-            setUploadedImages={setUploadedImages}
-          />
+      <div style={{ display: activeTab === 'carousel' ? 'block' : 'none' }}>
+        {/* Floating Control Panel */}
+        <ControlPanel 
+          config={config} 
+          updateConfig={updateConfig} 
+          generateSlides={generateSlides} 
+          onResetConfig={resetConfigs}
+          uploadedImages={uploadedImages}
+          setUploadedImages={setUploadedImages}
+          draftText={draftText}
+          setDraftText={setDraftText}
+        />
 
-          {/* Main Workspace Area */}
-          <main
-            ref={workspaceRef as any}
-            className="pt-32 pb-32 h-screen overflow-hidden select-none cursor-crosshair active:cursor-grabbing"
-            onWheel={handleWheel}
-            onPointerDown={(e) => {
-              if (isTextEditing) return;
+        {/* Main Workspace Area */}
+        <main
+          ref={workspaceRef as any}
+          className="pt-32 pb-32 h-screen overflow-hidden select-none cursor-crosshair active:cursor-grabbing"
+          onWheel={handleWheel}
+          onPointerDown={(e) => {
+            if (isTextEditing) return;
 
-              const alvo = e.target as HTMLElement | null;
+            const alvo = e.target as HTMLElement | null;
 
-              // se clicou em cima da imagem, deixa a imagem cuidar do drag dela
-              if (alvo?.closest('[data-imageframe="true"]')) return;
+            // se clicou em cima da imagem, deixa a imagem cuidar do drag dela
+            if (alvo?.closest('[data-imageframe="true"]')) return;
 
-              // só aceita botão esquerdo (0) ou botão do meio (1)
-              if (e.button !== 0 && e.button !== 1) return;
+            // só aceita botão esquerdo (0) ou botão do meio (1)
+            if (e.button !== 0 && e.button !== 1) return;
 
-              e.preventDefault();
+            e.preventDefault();
 
-              const inicioX = e.clientX;
-              const inicioY = e.clientY;
-              const posInicial = { ...workspacePos };
+            const inicioX = e.clientX;
+            const inicioY = e.clientY;
+            const posInicial = { ...workspacePos };
 
-              const mover = (evento: PointerEvent) => {
-                const dx = evento.clientX - inicioX;
-                const dy = evento.clientY - inicioY;
+            const mover = (evento: PointerEvent) => {
+              const dx = evento.clientX - inicioX;
+              const dy = evento.clientY - inicioY;
 
-                setWorkspacePos({
-                  x: posInicial.x + dx,
-                  y: posInicial.y + dy,
-                });
-              };
+              setWorkspacePos({
+                x: posInicial.x + dx,
+                y: posInicial.y + dy,
+              });
+            };
 
-              const parar = () => {
-                window.removeEventListener('pointermove', mover);
-                window.removeEventListener('pointerup', parar);
-              };
+            const parar = () => {
+              window.removeEventListener('pointermove', mover);
+              window.removeEventListener('pointerup', parar);
+            };
 
-              window.addEventListener('pointermove', mover);
-              window.addEventListener('pointerup', parar);
+            window.addEventListener('pointermove', mover);
+            window.addEventListener('pointerup', parar);
+          }}
+        >
+          <motion.div
+            animate={{ x: workspacePos.x, y: workspacePos.y, scale: zoom }}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 40,
+              mass: 0.5,
+              restDelta: 0.001
             }}
+            className="grid grid-cols-5 gap-x-10 gap-y-16 px-4 min-w-max origin-top-left"
+            style={{ transformOrigin: '0 0' }}
           >
-            <motion.div
-              animate={{ x: workspacePos.x, y: workspacePos.y, scale: zoom }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 40,
-                mass: 0.5,
-                restDelta: 0.001
-              }}
-              className="grid grid-cols-5 gap-x-10 gap-y-16 px-4 min-w-max origin-top-left"
-              style={{ transformOrigin: '0 0' }}
-            >
-              {config.slides.map((slide, index) => (
-                <motion.div
-                  key={slide.id}
-                  className="relative group shrink-0 slide-capture"
-                >
-                  <Slide
-                    data={slide}
-                    branding={config.branding}
-                    aspectRatio={config.aspectRatio}
-                    index={index}
-                    totalSlides={config.slides.length}
-                    isGlobalBranding={config.isGlobalBranding}
-                    presets={presets}
-                    onSavePreset={savePreset}
-                    onDeletePreset={deletePreset}
-                    onUpdate={(updates) => handleSlideUpdate(index, updates)}
-                    onBrandingUpdate={handleBrandingUpdate}
-                    onEditingChange={setIsTextEditing}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          </main>
+            {config.slides.map((slide, index) => (
+              <motion.div
+                key={slide.id}
+                className="relative group shrink-0 slide-capture"
+              >
+                <Slide
+                  data={slide}
+                  branding={config.branding}
+                  aspectRatio={config.aspectRatio}
+                  index={index}
+                  totalSlides={config.slides.length}
+                  isGlobalBranding={config.isGlobalBranding}
+                  presets={presets}
+                  onSavePreset={savePreset}
+                  onDeletePreset={deletePreset}
+                  onUpdate={(updates) => handleSlideUpdate(index, updates)}
+                  onBrandingUpdate={handleBrandingUpdate}
+                  onEditingChange={setIsTextEditing}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </main>
 
-          {/* Zoom Controls */}
-          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-xl border border-black/5">
-            <button 
-              onClick={() => setZoom(z => Math.max(0.2, z - 0.1))}
-              className="p-2 hover:bg-black/5 rounded-xl transition-colors"
-              title="Diminuir Zoom"
-            >
-              <ZoomOut className="w-5 h-5 text-gray-600" />
-            </button>
-            <span className="text-[11px] font-bold text-gray-600 w-12 text-center font-mono">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button 
-              onClick={() => setZoom(z => Math.min(3, z + 0.1))}
-              className="p-2 hover:bg-black/5 rounded-xl transition-colors"
-              title="Aumentar Zoom"
-            >
-              <ZoomIn className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-        </>
-      ) : (
+        {/* Zoom Controls */}
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-1 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-xl border border-black/5">
+          <button 
+            onClick={() => setZoom(z => Math.max(0.2, z - 0.1))}
+            className="p-2 hover:bg-black/5 rounded-xl transition-colors"
+            title="Diminuir Zoom"
+          >
+            <ZoomOut className="w-5 h-5 text-gray-600" />
+          </button>
+          <span className="text-[11px] font-bold text-gray-600 w-12 text-center font-mono">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button 
+            onClick={() => setZoom(z => Math.min(3, z + 0.1))}
+            className="p-2 hover:bg-black/5 rounded-xl transition-colors"
+            title="Aumentar Zoom"
+          >
+            <ZoomIn className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+      </div>
+
+      <div className="h-screen w-full" style={{ display: activeTab === 'reels' ? 'block' : 'none' }}>
         <ReelsEditor />
-      )}
+      </div>
 
       {/* Loading Overlay */}
       <AnimatePresence>

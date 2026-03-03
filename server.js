@@ -148,15 +148,24 @@ FORMATO DE RESPOSTA (JSON estrito):
 // Corta o vídeo usando FFmpeg com base nos timestamps
 const cutVideo = (inputPath, outputPath, start, end) => {
   return new Promise((resolve, reject) => {
-    const duration = end - start;
+    const duration = Number(end) - Number(start);
+    if (isNaN(duration) || duration <= 0) {
+      return reject(new Error(`Duração inválida: start=${start}, end=${end}`));
+    }
     ffmpeg(inputPath)
-      .setStartTime(start)
+      .setStartTime(Number(start))
       .setDuration(duration)
       .output(outputPath)
       .videoCodec("libx264")
       .audioCodec("aac")
       // Otimizações para VPS fraca: preset ultrafast, crf alto (menor qualidade, mais rápido)
-      .outputOptions(["-preset ultrafast", "-crf 28"])
+      // scale=trunc(iw/2)*2:trunc(ih/2)*2 garante dimensões pares para evitar erro do libx264
+      .outputOptions([
+        "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+        "-pix_fmt", "yuv420p",
+        "-preset", "ultrafast",
+        "-crf", "28"
+      ])
       .on("end", () => resolve(outputPath))
       .on("error", (err) => reject(err))
       .run();

@@ -45,25 +45,24 @@ interface ControlPanelProps {
   config: CarouselConfig;
   updateConfig: (updates: any) => void;
   generateSlides: () => void;
-
-  // antes: onClearImages?: () => void;
   onResetConfig?: () => void;
-
   uploadedImages: string[];
   setUploadedImages: React.Dispatch<React.SetStateAction<string[]>>;
+
+  draftText: string;
+  setDraftText: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({
+export const ControlPanel = ({
   config,
   updateConfig,
   generateSlides,
-
-  // antes: onClearImages,
   onResetConfig,
-
   uploadedImages,
-  setUploadedImages
-}) => {
+  setUploadedImages,
+  draftText,
+  setDraftText,
+}: ControlPanelProps) => {
 
   const [activeTab, setActiveTab] = useState<'ideia' | 'prompt' | 'branding' | 'content' | 'fotos'>('ideia');
   const [customPrompt, setCustomPrompt] = useState(() => {
@@ -77,12 +76,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
-  const [localText, setLocalText] = useState(() => 
-    config.slides
-      .map(s => `${s.headline || ''}\n${s.subheadline || ''}`.trim())
-      .filter(t => t.length > 0)
-      .join('\n\n')
-  );
+ const [localText, setLocalText] = useState(() => draftText || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
@@ -309,41 +303,11 @@ const handleBrandingChange = (key: keyof Branding, value: any) => {
     return tmp.textContent || tmp.innerText || "";
   };
 
-  // Sync local text with slides when they change (e.g. from AI)
-  useEffect(() => {
-    const text = config.slides
-      .map(s => `${stripHtml(s.headline || '')}\n${stripHtml(s.subheadline || '')}`.trim())
-      .filter(t => t.length > 0)
-      .join('\n\n');
-    
-    // Only update if the content is actually different to avoid cursor jumps
-    // when typing (since handleTextContentChange also updates config.slides)
-    const currentNormalized = localText.replace(/\n\n+/g, '\n\n').trim();
-    const newNormalized = text.replace(/\n\n+/g, '\n\n').trim();
-    
-    if (newNormalized !== currentNormalized) {
-      setLocalText(text);
-    }
-  }, [config.slides]);
 
-  const handleTextContentChange = (text: string) => {
-    setLocalText(text);
-    const normalized = text.replace(/\r\n/g, '\n');
-    // Split by double newlines or single newlines to get potential headlines/subheadlines
-    // We'll treat each non-empty line as a piece of content
-    const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    
-    const newSlides = [...config.slides];
-    for (let i = 0; i < config.slideCount; i++) {
-      if (!newSlides[i]) {
-        newSlides[i] = { id: crypto.randomUUID(), headline: '', subheadline: '', layout: 'full-bg' };
-      }
-      // Logic: 2 lines per slide
-      newSlides[i].headline = lines[i * 2] || '';
-      newSlides[i].subheadline = lines[i * 2 + 1] || '';
-    }
-    updateConfig({ slides: newSlides });
-  };
+const handleTextContentChange = (text: string) => {
+  setLocalText(text);
+  setDraftText(text); // ✅ só salva o rascunho, não atualiza slides
+};
 
   const tabs = [
     { id: 'ideia', icon: MessageSquare, label: 'Ideia' },
@@ -612,18 +576,35 @@ onClick={() => onResetConfig?.()}
           Dimensão
         </label>
         <div className="grid grid-cols-3 gap-2">
-          {(['1:1', '4:5', '9:16'] as AspectRatio[]).map((ratio) => (
+          {[
+            { id: '1:1', label: '1:1', icon: (
+              <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
+                <rect x="10" y="10" width="120" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8"/>
+              </svg>
+            )},
+            { id: '4:5', label: '4:5', icon: (
+              <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
+                <rect x="22" y="10" width="96" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8"/>
+              </svg>
+            )},
+            { id: '9:16', label: '9:16', icon: (
+              <svg viewBox="0 0 140 140" className="w-6 h-6 mb-1.5">
+                <rect x="36.25" y="10" width="67.5" height="120" rx="12" fill="none" stroke="currentColor" strokeWidth="8"/>
+              </svg>
+            )}
+          ].map((ratio) => (
             <button
-              key={ratio}
-              onClick={() => updateConfig({ aspectRatio: ratio })}
+              key={ratio.id}
+              onClick={() => updateConfig({ aspectRatio: ratio.id as AspectRatio })}
               className={cn(
-                "py-2 rounded-xl border text-sm font-medium transition-all",
-                config.aspectRatio === ratio
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
-                  : "border-black/5 hover:border-indigo-200 text-gray-600"
+                "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                config.aspectRatio === ratio.id
+                  ? "bg-indigo-50 border-indigo-500 text-indigo-600"
+                  : "bg-gray-50 border-black/5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               )}
             >
-              {ratio}
+              {ratio.icon}
+              <span className="text-[10px] font-bold">{ratio.label}</span>
             </button>
           ))}
         </div>
