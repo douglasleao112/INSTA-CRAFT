@@ -212,11 +212,11 @@ const cancelBrandingEdit = () => {
             )}
           </div>
         )}
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col justify-center whitespace-nowrap">
           {slot.type === 'text' ? (
             <>
               {(!isEffectivelyEmpty(slot.name) || (isEditingThisSlot && editingBrandingField === 'name')) && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 whitespace-nowrap">
                   <span
                     ref={nameRef}
                     contentEditable={isEditingThisSlot && editingBrandingField === 'name'}
@@ -242,7 +242,7 @@ const cancelBrandingEdit = () => {
                       if (e.key === 'Escape') cancelBrandingEdit();
                     }}
                     className={cn(
-                      "text-[10px] font-bold leading-tight rounded px-1 -mx-1 outline-none transition-all cursor-text",
+                      "text-[10px] font-bold leading-tight rounded px-1 -mx-1 outline-none transition-all cursor-text whitespace-nowrap",
                       isEditingThisSlot && editingBrandingField === 'name' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
                     )}
                     style={{ color: effectiveIsDark ? '#FFFFFF' : '#000000' }}
@@ -286,7 +286,7 @@ const cancelBrandingEdit = () => {
                     if (e.key === 'Escape') cancelBrandingEdit();
                   }}
                   className={cn(
-                    "text-[8px] font-medium opacity-60 leading-tight rounded px-1 -mx-1 outline-none transition-all cursor-text",
+                    "text-[8px] font-medium opacity-60 leading-tight rounded px-1 -mx-1 outline-none transition-all cursor-text whitespace-nowrap",
                     isEditingThisSlot && editingBrandingField === 'handle' ? "ring-1 ring-indigo-500/60 bg-white/80" : "hover:bg-white/5"
                   )}
                   style={{ color: effectiveIsDark ? 'rgba(255, 255, 255, 0.8)' : '#4A4A4A' }}
@@ -557,8 +557,13 @@ case 'full-bg':
         
       </div>
 
-     {/* Gradiente por cima da imagem (mais escuro embaixo) */}
-<div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent z-20 pointer-events-none" />
+{/* Gradiente só no terço inferior, começando mais escuro */}
+<div
+  className="absolute inset-x-0 bottom-0 h-1/2 z-20 pointer-events-none"
+  style={{
+     background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.88) 30%, rgba(0,0,0,0.45) 68%, rgba(0,0,0,0) 100%)'
+  }}
+/>
 
       {/* Texto em cima (continua editável) */}
     <div 

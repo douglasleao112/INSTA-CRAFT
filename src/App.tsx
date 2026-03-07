@@ -150,6 +150,42 @@ export default function App() {
     return INITIAL_CONFIG;
   });
 
+  const [draftText, setDraftText] = useState<string>('');
+
+  // Sync draft text to slides automatically
+  React.useEffect(() => {
+    if (config.slides.length === 0) return;
+
+    const normalized = (draftText || '').replace(/\r\n/g, '\n').trim();
+    const lines = normalized.split('\n').map(l => l.trim()).filter(Boolean);
+
+    setConfig(prev => {
+      const newSlides = prev.slides.map((slide, i) => {
+        const newHeadline = lines[i * 2];
+        const newSubheadline = lines[i * 2 + 1];
+        
+        // Only update if there's a corresponding line in the draft text
+        // and if it's different from the current text
+        if (!newHeadline && !newSubheadline) return slide;
+
+        return {
+          ...slide,
+          headline: newHeadline || slide.headline,
+          subheadline: newSubheadline || slide.subheadline,
+        };
+      });
+
+      // Check if anything actually changed to avoid infinite loops or unnecessary renders
+      const changed = newSlides.some((s, i) => 
+        s.headline !== prev.slides[i].headline || 
+        s.subheadline !== prev.slides[i].subheadline
+      );
+
+      if (!changed) return prev;
+      return { ...prev, slides: newSlides };
+    });
+  }, [draftText, config.slides.length]);
+
   const [workspacePos, setWorkspacePos] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [isTextEditing, setIsTextEditing] = useState(false);
@@ -157,7 +193,6 @@ export default function App() {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'carousel' | 'reels'>('carousel');
-  const [draftText, setDraftText] = useState<string>('');
 
   const [presets, setPresets] = useState<(SlideData | null)[]>(() => {
     const saved = localStorage.getItem('slide-presets');
@@ -406,9 +441,13 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
     setZoom(1);
     setWorkspacePos({ x: 0, y: 0 });
     
-    // Wait for React to render the un-zoomed state
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for React to render the un-zoomed state and for animations to settle
+    await new Promise(resolve => setTimeout(resolve, 800));
     
+    const mainEl = workspaceRef.current;
+    const originalOverflow = mainEl?.style.overflow;
+    if (mainEl) mainEl.style.overflow = 'visible';
+
     try {
       const zip = new JSZip();
       const slideElements = document.querySelectorAll('.slide-capture');
@@ -429,6 +468,7 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
     } catch (error) {
       console.error('Erro ao baixar imagens:', error);
     } finally {
+      if (mainEl) mainEl.style.overflow = originalOverflow || '';
       // Restore zoom and position
       setZoom(currentZoom);
       setWorkspacePos(currentPos);
@@ -448,9 +488,13 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
     setZoom(1);
     setWorkspacePos({ x: 0, y: 0 });
     
-    // Wait for React to render the un-zoomed state
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for React to render the un-zoomed state and for animations to settle
+    await new Promise(resolve => setTimeout(resolve, 800));
     
+    const mainEl = workspaceRef.current;
+    const originalOverflow = mainEl?.style.overflow;
+    if (mainEl) mainEl.style.overflow = 'visible';
+
     try {
       const slideElements = document.querySelectorAll('.slide-capture');
       
@@ -475,6 +519,7 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
     } catch (error) {
       console.error('Erro ao baixar imagens individuais:', error);
     } finally {
+      if (mainEl) mainEl.style.overflow = originalOverflow || '';
       // Restore zoom and position
       setZoom(currentZoom);
       setWorkspacePos(currentPos);
