@@ -204,7 +204,7 @@ const cancelBrandingEdit = () => {
             }}
           >
             {slot.avatar ? (
-              <img src={slot.avatar} className="w-full h-full object-cover" alt="" />
+              <img src={slot.avatar} className="w-full h-full object-cover" alt="" crossOrigin="anonymous" />
             ) : (
               <span className="text-xs font-bold text-white flex items-center justify-center h-full">
                 {slot.name.charAt(0)}
@@ -538,12 +538,12 @@ case 'full-bg':
 >
       {/* Imagem (se existir) */}
       {data.image ? (
-        <motion.img
-          animate={{ x: 0, y: 0 }}
+        <img
           src={data.image}
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           alt=""
           draggable={false}
+          crossOrigin="anonymous"
           data-imageframe="true"
         />
       ) : (
@@ -609,6 +609,7 @@ onDoubleClick={(e) => {
   style={imgStyle}
   alt=""
   draggable={false}
+  crossOrigin="anonymous"
 />
     ) : (
       <div className="w-full h-full bg-black/5 flex items-center justify-center text-gray-300">
@@ -656,6 +657,7 @@ onDoubleClick={(e) => {
   style={imgStyle}
   alt=""
   draggable={false}
+  crossOrigin="anonymous"
 />
     ) : (
       <div className="w-full h-full bg-black/5 flex items-center justify-center text-gray-300">
@@ -710,6 +712,7 @@ onDoubleClick={(e) => {
   style={imgStyle}
   alt=""
   draggable={false}
+  crossOrigin="anonymous"
 />
     ) : (
       <div className="w-full h-full bg-black/5 flex items-center justify-center text-gray-300">
@@ -762,6 +765,7 @@ onDoubleClick={(e) => {
   style={imgStyle}
   alt=""
   draggable={false}
+  crossOrigin="anonymous"
 />
     ) : (
       <div className="w-full h-full bg-black/5 flex items-center justify-center text-gray-300">

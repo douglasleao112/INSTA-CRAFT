@@ -416,29 +416,9 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
       for (let i = 0; i < slideElements.length; i++) {
         const el = slideElements[i] as HTMLElement;
         
-        // DOM scaling trick to prevent text wrapping issues
-        const originalTransform = el.style.transform;
-        const originalTransformOrigin = el.style.transformOrigin;
-        
-        el.style.transform = 'scale(3)';
-        el.style.transformOrigin = 'top left';
-        
-        // Wait a tick for layout to update
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
         const dataUrl = await domToPng(el, {
-          scale: 1,
-          width: el.clientWidth * 3,
-          height: el.clientHeight * 3,
-          style: {
-            transform: 'scale(3)',
-            transformOrigin: 'top left'
-          }
+          scale: 3,
         });
-        
-        // Revert DOM scaling
-        el.style.transform = originalTransform;
-        el.style.transformOrigin = originalTransformOrigin;
         
         const base64Data = dataUrl.split(',')[1];
         zip.file(`slide-${i + 1}.png`, base64Data, { base64: true });
@@ -478,29 +458,9 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
       for (let i = slideElements.length - 1; i >= 0; i--) {
         const el = slideElements[i] as HTMLElement;
         
-        // DOM scaling trick to prevent text wrapping issues
-        const originalTransform = el.style.transform;
-        const originalTransformOrigin = el.style.transformOrigin;
-        
-        el.style.transform = 'scale(3)';
-        el.style.transformOrigin = 'top left';
-        
-        // Wait a tick for layout to update
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
         const dataUrl = await domToPng(el, {
-          scale: 1,
-          width: el.clientWidth * 3,
-          height: el.clientHeight * 3,
-          style: {
-            transform: 'scale(3)',
-            transformOrigin: 'top left'
-          }
+          scale: 3,
         });
-        
-        // Revert DOM scaling
-        el.style.transform = originalTransform;
-        el.style.transformOrigin = originalTransformOrigin;
         
         const link = document.createElement('a');
         link.download = `slide-${i + 1}.png`;
