@@ -795,17 +795,16 @@ onDoubleClick={(e) => {
   }; 
 
   return (
-    <div className="relative group shrink-0">
+    <div className={cn("relative group shrink-0 shadow-2xl", getAspectRatioClass())} style={{ width: aspectRatio === '9:16' ? '400px' : '450px' }}>
 <div
   className={cn(
-    "relative shadow-2xl overflow-hidden",
+    "relative overflow-hidden slide-capture w-full h-full",
     getAspectRatioClass(),
     data.layout !== 'full-bg' && "cursor-pointer"
   )}
   onClick={toggleBackgroundColor}
   style={{
     backgroundColor: data.backgroundColor || branding.backgroundColor,
-    width: aspectRatio === '9:16' ? '400px' : '450px'
   }} 
 >
 

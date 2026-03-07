@@ -754,7 +754,7 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
             {config.slides.map((slide, index) => (
               <motion.div
                 key={slide.id}
-                className="relative group shrink-0 slide-capture"
+                className="relative group shrink-0"
               >
                 <Slide
                   data={slide}
