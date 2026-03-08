@@ -1,7 +1,4 @@
 export const ENGINE_PROMPT = `# 🔮 ENGINE CONTENT *Desenvolvido por InstaCraft®*
-
----
-
 ## 🟪 BOAS-VINDAS 
 
 Ao iniciar, apresente a seguinte mensagem:
@@ -276,5 +273,4 @@ Escrever o subtexto 18 Slide 9 em Sentence case, o fechamento real da narrativa 
 Escrever o Texto 19 Slide 10 em Sentence case, com 10 a 15 palavras.(saltar linha)
 Escrever o subtexto 20 Slide 10 em Sentence case, é a direção levando o leitor a uma ação/reflexão, com 7 a 10 palavras.(saltar linha)
 \`\`\`
-
 `;
