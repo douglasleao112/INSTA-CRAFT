@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AspectRatio, Branding, SlideData, LayoutType, SignatureSlot } from '../types';
 import { cn } from '../lib/utils';
-import { BadgeCheck, Trash2, Plus, X } from 'lucide-react';
+import { BadgeCheck, Trash2, Plus, X, CircleDot } from 'lucide-react';
 import { TextToolbar } from './TextToolbar';
 
 const LAYOUTS: { type: LayoutType; label: string }[] = [
@@ -53,6 +53,7 @@ export const Slide = React.memo<SlideProps>(({
   const subheadlineRef = useRef<HTMLParagraphElement>(null);
   const ballImageInputRef = useRef<HTMLInputElement>(null);
   const [isHoveringBall, setIsHoveringBall] = useState(false);
+  const [isHoveringSlide, setIsHoveringSlide] = useState(false);
   const nameRef = useRef<HTMLSpanElement>(null);
   const handleRef = useRef<HTMLSpanElement>(null);
 
@@ -147,9 +148,6 @@ const cancelBrandingEdit = () => {
     e.stopPropagation();
     if (data.layout !== 'full-bg') return;
     
-    const target = e.target as HTMLElement;
-    if (target.closest('[data-imageframe="true"]') || target.closest('button')) return;
-
     const isEnabled = data.ball?.enabled || false;
     onUpdate?.({
       ball: {
@@ -576,8 +574,9 @@ case 'full-bg':
     e.stopPropagation();
     pickSlideImage();
   }}
-  onClick={toggleBall}
-  title="Clique para bola | Duplo clique para fundo"
+  onMouseEnter={() => setIsHoveringSlide(true)}
+  onMouseLeave={() => setIsHoveringSlide(false)}
+  title="Duplo clique para fundo"
 >
       {/* Imagem (se existir) */}
       {data.image ? (
@@ -594,6 +593,26 @@ case 'full-bg':
           Clique para adicionar imagem
         </div>
       )}
+
+      {/* Ícone de bola no centro (apenas no hover e se a bola não estiver ativa) */}
+      <AnimatePresence>
+        {isHoveringSlide && !data.ball?.enabled && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute inset-0 flex items-center justify-center z-[15] pointer-events-none"
+          >
+            <button
+              onClick={toggleBall}
+              className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/40 hover:text-white/80 transition-all pointer-events-auto backdrop-blur-sm shadow-lg group"
+              title="Adicionar bola"
+            >
+              <CircleDot size={20} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bola (se habilitada) */}
       {data.ball?.enabled && (
@@ -649,7 +668,7 @@ case 'full-bg':
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="w-full h-full bg-white/20 flex items-center justify-center text-white text-[10px] text-center p-2 pointer-events-none"
+                    className="w-full h-full bg-white/20 flex items-center justify-center text-white text-[6px] text-center p-2 pointer-events-none"
                   >
                     Duplo clique para foto
                   </motion.div>
@@ -668,13 +687,22 @@ case 'full-bg':
                 className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
               >
                 <div 
-                  className="flex flex-col gap-3 w-[100px] pointer-events-auto"
+                  className="flex flex-col gap-3 w-[100px] pointer-events-auto relative"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {/* Botão de fechar bola */}
+                  <button
+                    onClick={toggleBall}
+                    className="absolute -top-6 -right-2 p-1 text-white/40 hover:text-white/90 transition-colors"
+                    title="Remover bola"
+                  >
+                    <X size={12} />
+                  </button>
+
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-[7px] font-black text-white/90 uppercase tracking-widest">Size</label>
-                      <span className="text-[7px] font-mono text-white/60">{data.ball.size}</span>
+                      <label className="text-[6px] font-black text-white/90 uppercase tracking-widest">Size</label>
+                      <span className="text-[6px] font-mono text-white/60">{data.ball.size}</span>
                     </div>
                     <input 
                       type="range" 
@@ -691,8 +719,8 @@ case 'full-bg':
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-[7px] font-black text-white/90 uppercase tracking-widest">Border</label>
-                      <span className="text-[7px] font-mono text-white/60">{data.ball.borderWidth}</span>
+                      <label className="text-[6px] font-black text-white/90 uppercase tracking-widest">Border</label>
+                      <span className="text-[6px] font-mono text-white/60">{data.ball.borderWidth}</span>
                     </div>
                     <input 
                       type="range" 
