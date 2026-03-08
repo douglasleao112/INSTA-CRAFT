@@ -77,6 +77,7 @@ export const ControlPanel = ({
   const [isPinned, setIsPinned] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
  const [localText, setLocalText] = useState(() => draftText || '');
+  const [openTextureKey, setOpenTextureKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
@@ -626,54 +627,176 @@ onClick={() => onResetConfig?.()}
     </div>
 
     {/* Palette Section */}
-    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">
-        Paleta de Cores
+    <div className="flex items-center justify-between mb-4">
+      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+        Paleta de Cores e Layout
       </label>
+    </div>
     
-    <div className="bg-gray-50 p-4 rounded-2xl border border-black/5">
-      
-      <div className="grid grid-cols-4 gap-y-6 gap-x-2">
-        {[
-          { label: 'Fundo', key: 'backgroundColor', type: 'color' },
-          { label: 'Título', key: 'primaryColor', type: 'color' },
-          { label: 'Subtítulo', key: 'secondaryColor', type: 'color' },
-          { label: 'Vinheta', key: 'vignette', type: 'checkbox' },
-          
-          { label: 'Fundo II', key: 'alternativeBackgroundColor', type: 'color' },
-          { label: 'Título II', key: 'alternativePrimaryColor', type: 'color' },
-          { label: 'Sub. II', key: 'alternativeSecondaryColor', type: 'color' },
-          { label: 'Vinheta II', key: 'alternativeVignette', type: 'checkbox' },
-          
-          { label: 'Fundo III', key: 'thirdBackgroundColor', type: 'color' },
-          { label: 'Título III', key: 'thirdPrimaryColor', type: 'color' },
-          { label: 'Sub. III', key: 'thirdSecondaryColor', type: 'color' },
-          { label: 'Vinheta III', key: 'thirdVignette', type: 'checkbox' }
-        ].map((item) => (
-        <div key={item.key} className="flex flex-col items-center justify-center gap-2 h-[60px]">
-            {item.type === 'color' ? (
-              <input
-                type="color"
-                value={(config.branding as any)[item.key]}
-                onChange={(e) => handleBrandingChange(item.key as any, e.target.value)}
-                className="w-6 h-7 rounded cursor-pointer border-none p-0 overflow-hidden"
-              />
-            ) : (
-              <button
-                onClick={() => handleBrandingChange(item.key as any, !(config.branding as any)[item.key])}
-                className={cn(
-                  "w-5 h-5 rounded flex items-center justify-center transition-all border",
-                  (config.branding as any)[item.key]
-                    ? "bg-indigo-600 border-indigo-600 text-white"
-                    : "bg-white border-black/5 text-gray-300"
-                )}
-              >
-                <Check className={cn("w-3 h-3 transition-transform", (config.branding as any)[item.key] ? "scale-100" : "scale-0")} />
-              </button>
-            )}
-            <span className="text-[9px] font-bold text-gray-500 uppercase text-center leading-tight">{item.label}</span>
+    <div className="space-y-3">
+      {[
+        { 
+          id: 'I', 
+          title: 'Principal',
+          items: [
+            { label: 'Fundo', key: 'backgroundColor', type: 'color' },
+            { label: 'Título', key: 'primaryColor', type: 'color' },
+            { label: 'Sub.', key: 'secondaryColor', type: 'color' },
+            { label: 'Vinheta', key: 'vignette', type: 'checkbox' },
+            { label: 'Textura', key: 'texture', type: 'texture' }
+          ]
+        },
+        { 
+          id: 'II', 
+          title: 'Secundário',
+          items: [
+            { label: 'Fundo', key: 'alternativeBackgroundColor', type: 'color' },
+            { label: 'Título', key: 'alternativePrimaryColor', type: 'color' },
+            { label: 'Sub.', key: 'alternativeSecondaryColor', type: 'color' },
+            { label: 'Vinheta', key: 'alternativeVignette', type: 'checkbox' },
+            { label: 'Textura', key: 'alternativeTexture', type: 'texture' }
+          ]
+        },
+        { 
+          id: 'III', 
+          title: 'Terciário',
+          items: [
+            { label: 'FundoI', key: 'thirdBackgroundColor', type: 'color' },
+            { label: 'Título', key: 'thirdPrimaryColor', type: 'color' },
+            { label: 'Sub.', key: 'thirdSecondaryColor', type: 'color' },
+            { label: 'VinhetaI', key: 'thirdVignette', type: 'checkbox' },
+            { label: 'Textura', key: 'thirdTexture', type: 'texture' }
+          ]
+        }
+      ].map((row) => (
+        <div key={row.id} className="bg-gray-50/80 p-3 pt-2.5 rounded-2xl border border-black/5 flex flex-col gap-2">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[9px] font-bold text-indigo-600/60 uppercase tracking-widest">{row.title}</span>
           </div>
-        ))}
-      </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="grid grid-cols-3 gap-2 flex-1">
+              {row.items.slice(0, 3).map((item) => (
+                <div key={item.key} className="flex flex-col items-center gap-1.5">
+                  <input
+                    type="color"
+                    value={(config.branding as any)[item.key]}
+                    onChange={(e) => handleBrandingChange(item.key as any, e.target.value)}
+                    className="w-7 h-8 rounded-lg cursor-pointer border-none p-0 overflow-hidden shadow-sm"
+                  />
+                  <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter text-center leading-none">{item.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-px h-8 bg-black/5" />
+
+            <div className="flex gap-2.5">
+              {row.items.slice(3).map((item) => (
+                <div key={item.key} className="flex flex-col items-center gap-1.5">
+                  {item.type === 'checkbox' ? (
+                    <button
+                      onClick={() => handleBrandingChange(item.key as any, !(config.branding as any)[item.key])}
+                      className={cn(
+                        "w-7 h-8 rounded-lg flex items-center justify-center transition-all border shadow-sm",
+                        (config.branding as any)[item.key]
+                          ? "bg-indigo-600 border-indigo-600 text-white"
+                          : "bg-white border-black/10 text-gray-300"
+                      )}
+                    >
+                      <Check className={cn("w-3.5 h-3.5 transition-transform", (config.branding as any)[item.key] ? "scale-100" : "scale-0")} />
+                    </button>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        onClick={() => setOpenTextureKey(openTextureKey === item.key ? null : item.key)}
+                        className={cn(
+                          "w-7 h-8 rounded-lg border transition-all overflow-hidden flex items-center justify-center shadow-sm",
+                          openTextureKey === item.key ? "border-indigo-500 ring-2 ring-indigo-500/20" : "border-black/10"
+                        )}
+                      >
+                        <div className="w-full h-full bg-white relative">
+                          {(config.branding as any)[item.key] === 'grid' && (
+                            <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(#ddd 1px, transparent 1px), linear-gradient(90deg, #ddd 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
+                          )}
+                          {(config.branding as any)[item.key] === 'lines' && (
+                            <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(#ddd 1px, transparent 1px)', backgroundSize: '100% 4px' }} />
+                          )}
+                          {(config.branding as any)[item.key] === 'dots' && (
+                            <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#ddd 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
+                          )}
+                          {(config.branding as any)[item.key] === 'none' && (
+                            <div className="absolute inset-0 bg-white flex items-center justify-center">
+                              <div className="w-full h-[1px] bg-red-400 rotate-45 opacity-40" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {openTextureKey === item.key && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-[60]" 
+                              onClick={() => setOpenTextureKey(null)} 
+                            />
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[70] bg-white rounded-xl shadow-xl border border-black/5 p-2 grid grid-cols-2 gap-1 min-w-[100px]"
+                            >
+                              {[
+                                { id: 'none', label: 'Liso' },
+                                { id: 'grid', label: 'Grade' },
+                                { id: 'lines', label: 'Linhas' },
+                                { id: 'dots', label: 'Pontos' }
+                              ].map((tex) => (
+                                <button
+                                  key={tex.id}
+                                  onClick={() => {
+                                    handleBrandingChange(item.key as any, tex.id);
+                                    setOpenTextureKey(null);
+                                  }}
+                                  className={cn(
+                                    "flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all",
+                                    (config.branding as any)[item.key] === tex.id 
+                                      ? "bg-indigo-50 text-indigo-600" 
+                                      : "hover:bg-black/5 text-gray-500"
+                                  )}
+                                >
+                                  <div className="w-8 h-8 rounded border border-black/5 bg-white relative overflow-hidden">
+                                    {tex.id === 'grid' && (
+                                      <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(#ddd 1px, transparent 1px), linear-gradient(90deg, #ddd 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
+                                    )}
+                                    {tex.id === 'lines' && (
+                                      <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(#ddd 1px, transparent 1px)', backgroundSize: '100% 4px' }} />
+                                    )}
+                                    {tex.id === 'dots' && (
+                                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#ddd 1px, transparent 1px)', backgroundSize: '4px 4px' }} />
+                                    )}
+                                    {tex.id === 'none' && (
+                                      <div className="absolute inset-0 bg-white flex items-center justify-center">
+                                        <div className="w-full h-[1px] bg-red-400 rotate-45 opacity-40" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="text-[8px] font-bold uppercase">{tex.label}</span>
+                                </button>
+                              ))}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                  <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter text-center leading-none">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
 
 

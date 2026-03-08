@@ -24,6 +24,8 @@ homePosition?: { x: number; y: number }; // ✅ posição original
   showFrame: boolean;
 }
 
+export type TextureType = 'none' | 'grid' | 'lines' | 'dots';
+
 export interface Branding {
   backgroundColor: string;
   alternativeBackgroundColor: string;
@@ -38,6 +40,9 @@ export interface Branding {
   vignette: boolean;
   alternativeVignette: boolean;
   thirdVignette: boolean;
+  texture: TextureType;
+  alternativeTexture: TextureType;
+  thirdTexture: TextureType;
   handle: string;
   name: string;
   imageRadius: number;

@@ -179,7 +179,7 @@ const cancelBrandingEdit = () => {
         onClick={(e) => e.stopPropagation()}
         data-imageframe="true"
         className={cn(
-          "absolute top-5 left-7 z-20 flex items-center gap-1.5 cursor-grab active:cursor-grabbing",
+          "absolute top-5 left-7 z-[25] flex items-center gap-1.5 cursor-grab active:cursor-grabbing",
           slot.showFrame ? "p-2.5 border" : "p-0"
         )}
         style={{
@@ -339,6 +339,11 @@ const cancelBrandingEdit = () => {
     (isMainBg && branding.vignette) ||
     (isAltBg && branding.alternativeVignette) ||
     (isThirdBg && branding.thirdVignette);
+
+  const currentTexture = 
+    isMainBg ? branding.texture :
+    isAltBg ? branding.alternativeTexture :
+    branding.thirdTexture;
 
   const isDarkBg = (color: string) => {
     const hex = color.replace('#', '');
@@ -540,7 +545,7 @@ case 'full-bg':
       {data.image ? (
         <img
           src={data.image}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[10]"
           alt=""
           draggable={false}
           crossOrigin="anonymous"
@@ -594,7 +599,7 @@ case 'text-top-img-bottom':
     setActivePresetIndex(null);
     onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
   }}
-  className="h-[50%] overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+  className="h-[50%] overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing z-[10]" 
   style={imgWrapStyle}
   data-imageframe="true"
 >
@@ -642,7 +647,7 @@ onDoubleClick={(e) => {
         setActivePresetIndex(null);
         onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
       }}
-      className="h-[50%] mt-5 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+      className="h-[50%] mt-5 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing z-[10]" 
       style={imgWrapStyle}
       data-imageframe="true"
     >
@@ -697,7 +702,7 @@ onDoubleClick={(e) => {
     setActivePresetIndex(null);
     onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
   }}
-  className="flex-1 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+  className="flex-1 overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing z-[10]" 
   style={imgWrapStyle}
   data-imageframe="true"
 >
@@ -750,7 +755,7 @@ case 'headline-img-subheadline':
     setActivePresetIndex(null);
     onUpdate?.({ imagePos: { x: iPos.x + info.offset.x, y: iPos.y + info.offset.y } });
   }}
-  className="h-[50%] overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing" 
+  className="h-[50%] overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing z-[10]" 
   style={imgWrapStyle}
   data-imageframe="true"
 >
@@ -817,9 +822,24 @@ onDoubleClick={(e) => {
       />
 
       {renderLayout()}
+
+      {currentTexture !== 'none' && (
+        <div className="absolute inset-0 pointer-events-none z-[1] overflow-hidden" style={{ opacity: effectiveIsDark ? 0.15 : 0.05 }}>
+          <div className="absolute inset-0" style={{
+            backgroundImage: 
+              currentTexture === 'grid' ? `linear-gradient(${effectiveIsDark ? '#fff' : '#000'} 1px, transparent 1px), linear-gradient(90deg, ${effectiveIsDark ? '#fff' : '#000'} 1px, transparent 1px)` :
+              currentTexture === 'lines' ? `linear-gradient(${effectiveIsDark ? '#fff' : '#000'} 1px, transparent 1px)` :
+              currentTexture === 'dots' ? `radial-gradient(${effectiveIsDark ? '#fff' : '#000'} 1px, transparent 1px)` : 'none',
+            backgroundSize: 
+              currentTexture === 'grid' ? '24px 24px' :
+              currentTexture === 'lines' ? '100% 24px' :
+              currentTexture === 'dots' ? '24px 24px' : 'auto'
+          }} />
+        </div>
+      )}
       
       {showVignette && (
-        <div className="absolute inset-0 pointer-events-none z-[25] bg-[radial-gradient(circle,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
+        <div className="absolute inset-0 pointer-events-none z-[15] bg-[radial-gradient(circle,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
       )}
 
       {/* Signature Slots */}
