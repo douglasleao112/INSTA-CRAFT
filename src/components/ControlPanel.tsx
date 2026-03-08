@@ -661,10 +661,10 @@ onClick={() => onResetConfig?.()}
           id: 'III', 
           title: 'Terciário',
           items: [
-            { label: 'FundoI', key: 'thirdBackgroundColor', type: 'color' },
+            { label: 'Fundo', key: 'thirdBackgroundColor', type: 'color' },
             { label: 'Título', key: 'thirdPrimaryColor', type: 'color' },
             { label: 'Sub.', key: 'thirdSecondaryColor', type: 'color' },
-            { label: 'VinhetaI', key: 'thirdVignette', type: 'checkbox' },
+            { label: 'Vinheta', key: 'thirdVignette', type: 'checkbox' },
             { label: 'Textura', key: 'thirdTexture', type: 'texture' }
           ]
         }
