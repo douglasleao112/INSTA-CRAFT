@@ -417,6 +417,7 @@ subheadline: lines[i * 2 + 1] || existingSlide?.subheadline || `Subtítulo expli
         subheadlinePos,
         imagePos,
         backgroundColor,
+        ball: existingSlide?.ball,
       };
     });
 

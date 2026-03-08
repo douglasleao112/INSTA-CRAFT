@@ -51,6 +51,8 @@ export const Slide = React.memo<SlideProps>(({
 
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const subheadlineRef = useRef<HTMLParagraphElement>(null);
+  const ballImageInputRef = useRef<HTMLInputElement>(null);
+  const [isHoveringBall, setIsHoveringBall] = useState(false);
   const nameRef = useRef<HTMLSpanElement>(null);
   const handleRef = useRef<HTMLSpanElement>(null);
 
@@ -122,6 +124,42 @@ const cancelBrandingEdit = () => {
 
     // permite selecionar o mesmo arquivo novamente
     e.target.value = '';
+  };
+
+  const onBallImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      onUpdate?.({
+        ball: {
+          ...(data.ball || { enabled: true, position: { x: 0, y: 0 }, size: 150, borderWidth: 4 }),
+          image: reader.result as string
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const toggleBall = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (data.layout !== 'full-bg') return;
+    
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-imageframe="true"]') || target.closest('button')) return;
+
+    const isEnabled = data.ball?.enabled || false;
+    onUpdate?.({
+      ball: {
+        enabled: !isEnabled,
+        position: data.ball?.position || { x: 0, y: 0 },
+        size: data.ball?.size || 150,
+        borderWidth: data.ball?.borderWidth || 4,
+        image: data.ball?.image
+      }
+    });
   };
 
   const onBrandingPositionChangeInternal = (slotKey: keyof Branding['signatures'], pos: { x: number; y: number }) => {
@@ -538,8 +576,8 @@ case 'full-bg':
     e.stopPropagation();
     pickSlideImage();
   }}
-  onClick={(e) => e.stopPropagation()} // evita o “piscar” por clique simples
-  title="Duplo clique para trocar a imagem"
+  onClick={toggleBall}
+  title="Clique para bola | Duplo clique para fundo"
 >
       {/* Imagem (se existir) */}
       {data.image ? (
@@ -555,6 +593,125 @@ case 'full-bg':
         <div className="absolute inset-0 bg-black/5 flex items-center justify-center text-gray-300">
           Clique para adicionar imagem
         </div>
+      )}
+
+      {/* Bola (se habilitada) */}
+      {data.ball?.enabled && (
+        <motion.div
+          drag
+          dragMomentum={false}
+          initial={false}
+          animate={{ x: data.ball.position.x, y: data.ball.position.y }}
+          onDragEnd={(_, info) => {
+            onUpdate?.({
+              ball: {
+                ...data.ball!,
+                position: { 
+                  x: data.ball!.position.x + info.offset.x, 
+                  y: data.ball!.position.y + info.offset.y 
+                }
+              }
+            });
+          }}
+          onMouseEnter={() => setIsHoveringBall(true)}
+          onMouseLeave={() => setIsHoveringBall(false)}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[21] group"
+          style={{
+            width: `${data.ball.size}px`,
+            height: `${data.ball.size}px`,
+          }}
+          data-imageframe="true"
+        >
+          <div 
+            className="w-full h-full rounded-full border-white overflow-hidden relative cursor-grab active:cursor-grabbing shadow-xl"
+            style={{ borderWidth: `${data.ball.borderWidth}px` }}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              ballImageInputRef.current?.click();
+            }}
+          >
+            {data.ball.image ? (
+              <img 
+                src={data.ball.image} 
+                className={cn(
+                  "w-full h-full object-cover transition-all duration-300 pointer-events-none",
+                  isHoveringBall ? "brightness-[0.4]" : "brightness-100"
+                )} 
+                alt="" 
+                crossOrigin="anonymous" 
+              />
+            ) : (
+              <AnimatePresence>
+                {!isHoveringBall && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="w-full h-full bg-white/20 flex items-center justify-center text-white text-[10px] text-center p-2 pointer-events-none"
+                  >
+                    Duplo clique para foto
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
+          </div>
+
+          {/* Menu de opções no hover - Fora do overflow-hidden para manter tamanho fixo */}
+          <AnimatePresence>
+            {isHoveringBall && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
+              >
+                <div 
+                  className="flex flex-col gap-3 w-[100px] pointer-events-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[7px] font-black text-white/90 uppercase tracking-widest">Size</label>
+                      <span className="text-[7px] font-mono text-white/60">{data.ball.size}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="50" 
+                      max="600" 
+                      value={data.ball.size} 
+                      onChange={(e) => {
+                        onUpdate?.({
+                          ball: { ...data.ball!, size: parseInt(e.target.value) }
+                        });
+                      }}
+                      className="w-full h-0.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[7px] font-black text-white/90 uppercase tracking-widest">Border</label>
+                      <span className="text-[7px] font-mono text-white/60">{data.ball.borderWidth}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="30" 
+                      value={data.ball.borderWidth} 
+                      onChange={(e) => {
+                        onUpdate?.({
+                          ball: { ...data.ball!, borderWidth: parseInt(e.target.value) }
+                        });
+                      }}
+                      className="w-full h-0.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       )}
 
       {/* Overlay do hover (tela toda) */}
@@ -819,6 +976,14 @@ onDoubleClick={(e) => {
         accept="image/*"
         className="hidden"
         onChange={onSlideImageSelected}
+      />
+
+      <input
+        ref={ballImageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onBallImageSelected}
       />
 
       {renderLayout()}

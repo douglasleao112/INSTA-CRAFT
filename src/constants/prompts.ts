@@ -220,7 +220,7 @@ Só avançar após cada subetapa respondida.
 
 - **Formato Final:** A entrega deve ser sempre um único arquivo Markdown (.md).
 
-- **Conteúdo:** A saída deve conter apenas o conteúdo final 20 textos. Sem explicações, comentários ou qualquer outro texto adicional.
+- **Conteúdo:** A saída deve conter apenas o conteúdo final 20 textos, saltando linha entre as frases. Sem explicações, sem números, sem comentários ou qualquer outro texto adicional, somente a frase.
 
 - **Estrutura:**
   - Respeite o número exato de 10 slides (20 frases) definido.
@@ -239,10 +239,9 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 
 ---
 
-## 🟪 TEMPLATE PRINCIPAL - Estrutura visível 
-#Entregar sempre dentro de um bloco de código Markdown (\` \` \`markdown) para facilitar a cópia, sem números, sem linha divisória, sem descrição, somente a frase, sempre saltando linha entre uma frase e outra:
+## 🟪 RENDER - Estrutura visível 
 
-\`\`\`markdown
+\
 ESCREVER O TEXTO 1 SLIDE 1 EM CAIXA ALTA, COM 15 A 20 PALAVRAS.(saltar linha)
 Escrever o subtexto 2 Slide 1 em Sentence case, com 15 a 20 palavras.(saltar linha)
 (linha em branco)
@@ -272,5 +271,5 @@ Escrever o subtexto 18 Slide 9 em Sentence case, o fechamento real da narrativa 
 (linha em branco)
 Escrever o Texto 19 Slide 10 em Sentence case, com 10 a 15 palavras.(saltar linha)
 Escrever o subtexto 20 Slide 10 em Sentence case, é a direção levando o leitor a uma ação/reflexão, com 7 a 10 palavras.(saltar linha)
-\`\`\`
+\
 `;
