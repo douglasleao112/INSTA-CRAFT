@@ -25,7 +25,9 @@ import {
   Minimize2,
   CircleMinus,
   RectangleVertical,
-  Terminal
+  Terminal,
+  Copy,
+  ClipboardCheck
 } from 'lucide-react';
 import { AspectRatio, LayoutType, Branding, SlideData, SignatureSlot, CarouselConfig } from '../types';
 import { cn } from '../lib/utils';
@@ -90,6 +92,7 @@ const [isTypingIntro, setIsTypingIntro] = useState(true);
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
 
@@ -273,6 +276,13 @@ const sigs = config.branding.signatures;
     }
   };
 
+  const copyToClipboard = (text: string, index: number) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    });
+  };
+
 const handleBrandingChange = (key: keyof Branding, value: any) => {
   updateConfig({
     branding: { ...config.branding, [key]: value }
@@ -394,8 +404,12 @@ const shouldShowFrameSection = activeTextSignatures.some((s: any) => !!s?.showFr
 };
 
   const formatMarkdown = (text: string) => {
-    // Garante que tabelas tenham uma linha em branco antes para o parser reconhecer
-    return text.replace(/([^\n])\n\|/g, '$1\n\n|');
+    // Garante que tabelas tenham uma linha em branco antes, mas apenas se a linha anterior não começar com |
+    // Usamos uma função de substituição para verificar o contexto
+    return text.replace(/([^\n])\n\|/g, (match, p1) => {
+      if (p1 === '|') return match; // Se a linha anterior termina com |, não adiciona quebra extra
+      return p1 + '\n\n|';
+    });
   };
 
   return (
@@ -495,16 +509,36 @@ onClick={() => onResetConfig?.()}
                       m.role === 'user' ? "justify-end" : "justify-start"
                     )}>
                       <div className={cn(
-                        "max-w-[85%] w-fit p-3 rounded-2xl text-xs leading-relaxed select-text shadow-sm relative",
+                        "max-w-[90%] w-fit p-3 rounded-2xl text-xs leading-relaxed select-text shadow-sm relative group/msg",
                         m.role === 'user' 
                           ? "bg-indigo-600 text-white rounded-tr-none" 
                           : "bg-gray-100 text-gray-800 rounded-tl-none"
                       )}>
-                        <div className="markdown-body">
+                        <div className="markdown-body overflow-x-auto custom-scrollbar">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {formatMarkdown(m.text)}
                           </ReactMarkdown>
                         </div>
+
+                        {/* Botão de Copiar - Apenas se houver Markdown estruturado (tabelas, code blocks ou headers) */}
+                        {m.text && (m.text.includes('|') || m.text.includes('```') || /^#+/m.test(m.text)) && (
+                          <button
+                            onClick={() => copyToClipboard(m.text, i)}
+                            className={cn(
+                              "absolute -bottom-2 right-2 p-1.5 rounded-lg border shadow-sm transition-all opacity-0 group-hover/msg:opacity-100 z-10",
+                              m.role === 'user' 
+                                ? "bg-indigo-700 border-indigo-500 text-white" 
+                                : "bg-white border-black/5 text-gray-400 hover:text-indigo-600"
+                            )}
+                            title="Copiar texto"
+                          >
+                            {copiedIndex === i ? (
+                              <ClipboardCheck className="w-3 h-3" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
