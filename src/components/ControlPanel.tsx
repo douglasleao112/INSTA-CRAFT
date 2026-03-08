@@ -313,9 +313,9 @@ const handleTextContentChange = (text: string) => {
   const tabs = [
     { id: 'ideia', icon: MessageSquare, label: 'Ideia' },
     { id: 'prompt', icon: Terminal, label: 'Prompt' },
-    { id: 'branding', icon: Palette, label: 'Branding' },
-    { id: 'content', icon: Type, label: 'Conteúdo' },
-    { id: 'fotos', icon: ImageIcon, label: 'Fotos' },
+    { id: 'branding', icon: Palette, label: 'Brand' },
+    { id: 'content', icon: Type, label: 'TXT' },
+    { id: 'fotos', icon: ImageIcon, label: 'IMG' },
   ];
 
 
