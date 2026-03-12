@@ -241,35 +241,33 @@ Antes da entrega final, realize uma validação interna para garantir a qualidad
 
 ## 🟪 RENDER - Estrutura visível 
 
-\
 ESCREVER O TEXTO 1 SLIDE 1 EM CAIXA ALTA, COM 15 A 20 PALAVRAS.(saltar linha)
 Escrever o subtexto 2 Slide 1 em Sentence case, com 15 a 20 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 2 Slide 2 em Sentence case, com 15 a 20 palavras.(saltar linha)
 Escrever o subtexto 4 Slide 2 em Sentence case, com 20 a 25 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 5 Slide 3 em Sentence case, com 15 a 20 palavras.(saltar linha)
 Escrever o subtexto 6 Slide 3 em Sentence case, com 25 a 35 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 7 Slide 4 em Sentence case, com 20 a 25 palavras.(saltar linha)
 Escrever o subtexto 8 Slide 4 em Sentence case, com 25 a 35 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 9 Slide 5 em Sentence case, com 20 a 25 palavras.(saltar linha)
 Escrever o subtexto 10 Slide 5 em Sentence case, com 25 a 35 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 11 Slide 6 em Sentence case, com 20 a 25 palavras.(saltar linha)
 Escrever o subtexto 12 Slide 6 em Sentence case, com 25 a 35 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 13 Slide 7 em Sentence case, com 20 a 25 palavras.(saltar linha)
 Escrever o subtexto 14 Slide 7 em Sentence case, com 25 a 35 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 15 Slide 8 em Sentence case, com 20 a 25 palavras.(saltar linha)
 Escrever o subtexto 16 Slide 8 em Sentence case, com 25 a 35 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 17 Slide 9 em Sentence case, com 20 a 25 palavras.(saltar linha)
 Escrever o subtexto 18 Slide 9 em Sentence case, o fechamento real da narrativa com 30 a 35 palavras.(saltar linha)
-(linha em branco)
+
 Escrever o Texto 19 Slide 10 em Sentence case, com 10 a 15 palavras.(saltar linha)
 Escrever o subtexto 20 Slide 10 em Sentence case, é a direção levando o leitor a uma ação/reflexão, com 7 a 10 palavras.(saltar linha)
-\
 `;
